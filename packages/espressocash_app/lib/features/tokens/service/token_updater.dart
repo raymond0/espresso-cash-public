@@ -1,7 +1,7 @@
 import 'dart:core';
 
 import 'package:dfunc/dfunc.dart';
-import 'package:espressocash_api/espressocash_api.dart';
+import 'package:ec_client_dart/ec_client_dart.dart';
 import 'package:flutter/services.dart';
 import 'package:injectable/injectable.dart';
 
@@ -25,17 +25,17 @@ class TokenUpdater {
 
   @PostConstruct(preResolve: false)
   Future<void> call() => tryEitherAsync((_) async {
-        final actualHash = _tokensMetaStorage.getHash();
-        final rootToken = ServicesBinding.rootIsolateToken;
+    final actualHash = _tokensMetaStorage.getHash();
+    final rootToken = ServicesBinding.rootIsolateToken;
 
-        if (rootToken == null) return;
+    if (rootToken == null) return;
 
-        final serverHash = await _ecClient.getTokensMeta();
-        // ignore: avoid-weak-cryptographic-algorithms, non sensitive
-        final shouldInitialize = serverHash.md5 != actualHash;
+    final serverHash = await _ecClient.getTokensMeta();
+    // ignore: avoid-weak-cryptographic-algorithms, non sensitive
+    final shouldInitialize = serverHash.md5 != actualHash;
 
-        if (shouldInitialize) {
-          await _tokenRepository.update(_ecClient);
-        }
-      });
+    if (shouldInitialize) {
+      await _tokenRepository.update(_ecClient);
+    }
+  });
 }

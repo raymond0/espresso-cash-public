@@ -1,4 +1,4 @@
-// ignore_for_file: cast_nullable_to_non_nullable
+// ignore_for_file: cast_nullable_to_non_nullable, avoid-type-casts
 
 import 'dart:math';
 
@@ -46,53 +46,50 @@ void main() {
     }
   });
 
-  test(
-    'Can derive a public key from another public key and a seed',
-    () {
-      _withSeedKeyDerivationData.forEach((key, value) async {
-        final derived = await Ed25519HDPublicKey.createWithSeed(
-          fromPublicKey: Ed25519HDPublicKey.fromBase58(key),
-          seed: value['seed'] as String,
-          programId: Ed25519HDPublicKey.fromBase58(SystemProgram.programId),
-        );
+  test('Can derive a public key from another public key and a seed', () {
+    _withSeedKeyDerivationData.forEach((key, value) async {
+      final derived = await Ed25519HDPublicKey.createWithSeed(
+        fromPublicKey: Ed25519HDPublicKey.fromBase58(key),
+        seed: value['seed'] as String,
+        programId: Ed25519HDPublicKey.fromBase58(SystemProgram.programId),
+      );
 
-        expect(derived.toBase58(), value['result']);
-      });
-    },
-  );
+      expect(derived.toBase58(), value['result']);
+    });
+  });
 
-  test(
-    'Can copy a key pair data if bytes are not destroyed',
-    () async {
-      final randomKeyPair = await Ed25519HDKeyPair.random();
-      final simpleKeyPairData = await randomKeyPair.extract();
-      final testKeyPair = simpleKeyPairData.copy();
+  test('Can determine valid public key from base58', () {
+    for (final key in _withSeedKeyDerivationData.keys) {
+      expect(Ed25519HDPublicKey.isValidFromBase58(key), true);
+    }
+    expect(Ed25519HDPublicKey.isValidFromBase58('11111111111111111111111111111111'), true);
+    expect(Ed25519HDPublicKey.isValidFromBase58('111111111111111111111111111111111'), false);
+    expect(Ed25519HDPublicKey.isValidFromBase58('malformed'), false);
+  });
 
-      expect(randomKeyPair.publicKey, equals(testKeyPair.publicKey));
-    },
-  );
+  test('Can copy a key pair data if bytes are not destroyed', () async {
+    final randomKeyPair = await Ed25519HDKeyPair.random();
+    final simpleKeyPairData = await randomKeyPair.extract();
+    final testKeyPair = simpleKeyPairData.copy();
 
-  test(
-    'Cannot copy a key pair data if bytes are destroyed',
-    () async {
-      final randomKeyPair = await Ed25519HDKeyPair.random();
-      final simpleKeyPairData = await randomKeyPair.extract();
-      simpleKeyPairData.destroy();
+    expect(randomKeyPair.publicKey, equals(testKeyPair.publicKey));
+  });
 
-      expect(simpleKeyPairData.copy, throwsA(isA<StateError>()));
-    },
-  );
+  test('Cannot copy a key pair data if bytes are destroyed', () async {
+    final randomKeyPair = await Ed25519HDKeyPair.random();
+    final simpleKeyPairData = await randomKeyPair.extract();
+    simpleKeyPairData.destroy();
 
-  test(
-    'Cannot extract a key pair data if bytes are destroyed',
-    () async {
-      final randomKeyPair = await Ed25519HDKeyPair.random();
-      final simpleKeyPairData = await randomKeyPair.extract();
-      simpleKeyPairData.destroy();
+    expect(simpleKeyPairData.copy, throwsA(isA<StateError>()));
+  });
 
-      expect(simpleKeyPairData.extract, throwsA(isA<StateError>()));
-    },
-  );
+  test('Cannot extract a key pair data if bytes are destroyed', () async {
+    final randomKeyPair = await Ed25519HDKeyPair.random();
+    final simpleKeyPairData = await randomKeyPair.extract();
+    simpleKeyPairData.destroy();
+
+    expect(simpleKeyPairData.extract, throwsA(isA<StateError>()));
+  });
 
   group('getHDPath', () {
     test('returns correct path with account and change', () {
@@ -113,8 +110,7 @@ void main() {
   });
 }
 
-const _mnemonic =
-    'nothing steak step patient peasant assist add coral tone harsh hint dilemma';
+const _mnemonic = 'nothing steak step patient peasant assist add coral tone harsh hint dilemma';
 const _testCases = {
   0: {
     0: 'AZ9tSkwgBjvgNrSBKujYVobWkcVy7QuJJHUiiUs7PTG',

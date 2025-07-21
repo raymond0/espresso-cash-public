@@ -35,18 +35,18 @@ class ODPConfirmationScreen extends StatefulWidget {
     String? label,
     required Token token,
     required bool isEnabled,
-  }) =>
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ODPConfirmationScreen(
+  }) => Navigator.of(context).push(
+    MaterialPageRoute(
+      builder:
+          (context) => ODPConfirmationScreen(
             initialAmount: initialAmount,
             recipient: recipient,
             label: label,
             token: token,
             isEnabled: isEnabled,
           ),
-        ),
-      );
+    ),
+  );
 
   final String initialAmount;
   final Ed25519HDPublicKey recipient;
@@ -103,9 +103,7 @@ class _ScreenState extends State<ODPConfirmationScreen> {
                 content: BorderedRowChip(
                   backgroundColor: Colors.black,
                   child: Text(
-                    '${substring(address, 0, 4)}'
-                    '\u2026'
-                    '${substring(address, address.length - 4)}',
+                    '${substring(address, 0, 4)}\u2026${substring(address, address.length - 4)}',
                   ),
                 ),
                 dividerColor: CpColors.darkDividerColor,
@@ -127,18 +125,17 @@ class _ScreenState extends State<ODPConfirmationScreen> {
               const SizedBox(height: 16),
               Expanded(
                 child: LayoutBuilder(
-                  builder: (context, constraints) => widget.isEnabled
-                      ? AmountKeypad(
-                          controller: _amountController,
-                          maxDecimals: 2,
-                        )
-                      : SizedBox(height: constraints.maxHeight),
+                  builder:
+                      (context, constraints) =>
+                          widget.isEnabled
+                              ? AmountKeypad(controller: _amountController, maxDecimals: 2)
+                              : SizedBox(height: constraints.maxHeight),
                 ),
               ),
               const SizedBox(height: 16),
               FeeLabel(
                 keyText: '${context.l10n.fee}: ',
-                type: FeeType.direct(widget.recipient),
+                type: FeeType.direct(widget.recipient, token: widget.token),
               ),
               const SizedBox(height: 21),
               Padding(
@@ -159,7 +156,4 @@ class _ScreenState extends State<ODPConfirmationScreen> {
   }
 }
 
-const _textStyle = TextStyle(
-  fontSize: 17,
-  fontWeight: FontWeight.w500,
-);
+const _textStyle = TextStyle(fontSize: 17, fontWeight: FontWeight.w500);

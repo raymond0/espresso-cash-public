@@ -15,6 +15,7 @@ extension CryptoAmountExt on CryptoAmount {
 
     if (rate == null) return null;
 
+    // ignore: avoid-type-casts, controlled type
     return convert(rate: rate, to: currency) as FiatAmount;
   }
 }
@@ -28,11 +29,9 @@ extension FiatAmountExt on FiatAmount {
 
     if (rate == null) return null;
 
-    final inverted = rate.inverse.toDecimal(
-      scaleOnInfinitePrecision: token.decimals,
-    );
+    final inverted = rate.inverse.toDecimal(scaleOnInfinitePrecision: token.decimals);
 
-    return convert(rate: inverted, to: CryptoCurrency(token: token))
-        as CryptoAmount;
+    // ignore: avoid-type-casts, controlled type
+    return convert(rate: inverted, to: CryptoCurrency(token: token)) as CryptoAmount;
   }
 }

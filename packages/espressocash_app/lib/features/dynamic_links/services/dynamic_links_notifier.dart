@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:app_links/app_links.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dfunc/dfunc.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:uni_links/uni_links.dart';
 
 import '../../../config.dart';
 import '../data/dynamic_links_client.dart';
@@ -36,13 +36,13 @@ class DynamicLinksNotifier extends ChangeNotifier {
   }
 
   Future<void> _init() async {
-    final initialLink = await getInitialUri();
+    final initialLink = await AppLinks().getInitialLink();
 
     if (initialLink != null) {
       await _processLink(initialLink);
     }
 
-    _subscription = uriLinkStream.listen(_processLink);
+    _subscription = AppLinks().uriLinkStream.listen(_processLink);
   }
 
   Future<void> _processLink(Uri? link) async {
@@ -77,8 +77,7 @@ class DynamicLinksNotifier extends ChangeNotifier {
 }
 
 extension on Uri {
-  bool get isShortened =>
-      host == espressoCashLinkDomain && shortLinkHash.isNotEmpty;
+  bool get isShortened => host == espressoCashLinkDomain && shortLinkHash.isNotEmpty;
 
   bool isValidHash(String hash) => _calculateHash(this) == hash;
 

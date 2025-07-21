@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'json_rpc_exception.g.dart';
 
-abstract class JsonRpcErrorCode {
+abstract final class JsonRpcErrorCode {
   static const blockCleanedUp = -32001;
   static const sendTransactionPreflightFailure = -32002;
   static const transactionSignatureVerificationFailure = -32003;
@@ -25,8 +25,7 @@ abstract class JsonRpcErrorCode {
 class JsonRpcException implements Exception {
   const JsonRpcException(this.message, this.code, this.data);
 
-  factory JsonRpcException.fromJson(Map<String, dynamic> json) =>
-      _$JsonRpcExceptionFromJson(json);
+  factory JsonRpcException.fromJson(Map<String, dynamic> json) => _$JsonRpcExceptionFromJson(json);
 
   final String message;
   final int code;
@@ -50,9 +49,10 @@ class JsonRpcException implements Exception {
   Map<String, dynamic> toJson() => _$JsonRpcExceptionToJson(this);
 
   @override
-  String toString() => data != null
-      ? 'jsonrpc-2.0 error ($code): $message\n\t$data'
-      : 'jsonrpc-2.0 error ($code): $message';
+  String toString() =>
+      data != null
+          ? 'jsonrpc-2.0 error ($code): $message\n\t$data'
+          : 'jsonrpc-2.0 error ($code): $message';
 }
 
 @JsonEnum(fieldRename: FieldRename.pascal)

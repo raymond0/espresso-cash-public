@@ -26,20 +26,21 @@ class ConfirmPaymentBloc extends Bloc<_Event, _State> {
   ConfirmPaymentBloc({
     required QuoteRepository quoteRepository,
     required TokenBalancesRepository balancesRepository,
-  })  : _quoteRepository = quoteRepository,
-        _balancesRepository = balancesRepository,
-        super(ConfirmPaymentState(flowState: const Flow.initial())) {
+  }) : _quoteRepository = quoteRepository,
+       _balancesRepository = balancesRepository,
+       super(ConfirmPaymentState(flowState: const Flow.initial())) {
     on<Init>(_onInit);
     on<Confirmed>(_onConfirmed);
     on<Invalidated>(
       _onInvalidated,
-      transformer: (events, mapper) => events
-          .debounceTime(const Duration(milliseconds: 500))
-          .switchMap(mapper),
+      transformer:
+          (events, mapper) =>
+              events.debounceTime(const Duration(milliseconds: 500)).switchMap(mapper),
     );
   }
 
   final QuoteRepository _quoteRepository;
+  // ignore: dispose-class-fields, false positive
   final TokenBalancesRepository _balancesRepository;
 
   Timer? _timer;
@@ -50,27 +51,24 @@ class ConfirmPaymentBloc extends Bloc<_Event, _State> {
   }
 
   void _onInit(Init event, _Emitter emit) {
-    emit(
-      ConfirmPaymentState(
-        payment: event.payment,
-        flowState: const Flow.initial(),
-      ),
-    );
+    emit(ConfirmPaymentState(payment: event.payment, flowState: const Flow.initial()));
 
     add(const Invalidated());
   }
 
   Future<void> _onConfirmed(Confirmed _, _Emitter emit) async {
     final usdcBalance = await _balancesRepository.read(Token.usdc);
-    state.validate(usdcBalance).fold(
-      (e) {
-        emit(state.copyWith(flowState: Flow.failure(e)));
-        emit(state.copyWith(flowState: const Flow.initial()));
-      },
-      (r) {
-        emit(state.copyWith(flowState: Flow.success(r)));
-      },
-    );
+    state
+        .validate(usdcBalance)
+        .fold(
+          (e) {
+            emit(state.copyWith(flowState: Flow.failure(e)));
+            emit(state.copyWith(flowState: const Flow.initial()));
+          },
+          (r) {
+            emit(state.copyWith(flowState: Flow.success(r)));
+          },
+        );
   }
 
   Future<void> _onInvalidated(Invalidated _, _Emitter emit) async {
@@ -110,19 +108,13 @@ class ConfirmPaymentBloc extends Bloc<_Event, _State> {
 }
 
 extension on ConfirmPaymentState {
-  ConfirmPaymentState processing() => copyWith(
-        flowState: const Flow.processing(),
-      );
+  ConfirmPaymentState processing() => copyWith(flowState: const Flow.processing());
 
-  ConfirmPaymentState error(CreateOrderException e) => copyWith(
-        quote: null,
-        flowState: Flow.failure(e),
-      );
+  ConfirmPaymentState error(CreateOrderException e) =>
+      copyWith(quote: null, flowState: Flow.failure(e));
 
-  ConfirmPaymentState update(PaymentQuote quote) => copyWith(
-        quote: quote,
-        flowState: const Flow.initial(),
-      );
+  ConfirmPaymentState update(PaymentQuote quote) =>
+      copyWith(quote: quote, flowState: const Flow.initial());
 }
 
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
@@ -135,7 +127,7 @@ sealed class ConfirmPaymentEvent with _$ConfirmPaymentEvent {
 }
 
 @freezed
-class ConfirmPaymentState with _$ConfirmPaymentState {
+sealed class ConfirmPaymentState with _$ConfirmPaymentState {
   factory ConfirmPaymentState({
     DlnPayment? payment,
     PaymentQuote? quote,
@@ -145,27 +137,23 @@ class ConfirmPaymentState with _$ConfirmPaymentState {
 }
 
 extension ConfirmPaymentExt on ConfirmPaymentState {
-  CryptoAmount get fee =>
-      quote?.fee ?? const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
+  CryptoAmount get fee => quote?.fee ?? const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
 
   CryptoAmount get inputAmount =>
-      quote?.inputAmount ??
-      const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
+      quote?.inputAmount ?? const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
 
   CryptoAmount get receiverAmount =>
-      quote?.receiverAmount ??
-      const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
+      quote?.receiverAmount ?? const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc);
 
   @useResult
-  Either<CreateOrderException, PaymentQuote> validate(
-    CryptoAmount usdcBalance,
-  ) {
+  Either<CreateOrderException, PaymentQuote> validate(CryptoAmount usdcBalance) {
     final totalAmount = inputAmount + fee;
 
     if (usdcBalance < totalAmount) {
       return Either.left(
         CreateOrderException.insufficientBalance(
           balance: usdcBalance,
+          // ignore: avoid-type-casts, controlled type
           amount: totalAmount as CryptoAmount,
         ),
       );

@@ -1,13 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:brij_client/brij_client.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart' hide Order;
-import 'package:kyc_client_dart/kyc_client_dart.dart';
 
 import '../../../utils/errors.dart';
 import '../../accounts/auth_scope.dart';
 import '../../accounts/models/ec_wallet.dart';
 import '../../feature_flags/data/feature_flags_manager.dart';
+import '../models/kyc_validation_status.dart';
 
 @Singleton(scope: authScope)
 class KycRepository extends ChangeNotifier {
@@ -19,16 +20,16 @@ class KycRepository extends ChangeNotifier {
 
   Future<void>? _clientInitialization;
 
-  late final _config = _featureFlagsManager.isBrijDemoEnabled()
-      ? const AppConfig.demo()
-      : const AppConfig.production();
+  late final _config =
+      _featureFlagsManager.isBrijDemoEnabled()
+          ? const AppConfig.demo()
+          : const AppConfig.production();
 
-  Future<void> _init() => _clientInitialization ??= Future(() async {
+  Future<void> _init() =>
+      _clientInitialization ??= Future(() async {
         try {
           _kycUserClient = _createClient();
-          await _kycUserClient.init(
-            walletAddress: _ecWallet.publicKey.toString(),
-          );
+          await _kycUserClient.init(walletAddress: _ecWallet.publicKey.toString());
         } on Exception catch (exception) {
           _clientInitialization = null;
           reportError(exception);
@@ -43,27 +44,22 @@ class KycRepository extends ChangeNotifier {
   }
 
   KycUserClient _createClient() => KycUserClient(
-        config: _config,
-        sign: (data) async {
-          final signature =
-              await _ecWallet.sign([Uint8List.fromList(data.toList())]);
+    config: _config,
+    sign: (data) async {
+      final signature = await _ecWallet.sign([Uint8List.fromList(data.toList())]);
 
-          return signature.first;
-        },
-      );
+      return signature.first;
+    },
+  );
 
-  Future<UserData> _getUserData({required bool includeValues}) =>
-      _kycUserClient.getUserData(
-        userPK: _kycUserClient.authPublicKey,
-        secretKey: _kycUserClient.rawSecretKey,
-        includeValues: includeValues,
-      );
+  Future<UserData> _getUserData({required bool includeValues}) => _kycUserClient.getUserData(
+    secretKey: _kycUserClient.rawSecretKey,
+    includeValues: includeValues,
+  );
 
   Future<UserData?> fetchUser({bool includeValues = true}) async {
     try {
-      return await _initWrapper(
-        () => _getUserData(includeValues: includeValues),
-      );
+      return await _initWrapper(() => _getUserData(includeValues: includeValues));
     } on Exception catch (exception) {
       reportError(exception);
 
@@ -75,6 +71,7 @@ class KycRepository extends ChangeNotifier {
     Email? email,
     Phone? phone,
     Name? name,
+    Citizenship? citizenship,
     Document? document,
     BankInfo? bankInfo,
     BirthDate? birthDate,
@@ -85,6 +82,7 @@ class KycRepository extends ChangeNotifier {
         email: email,
         phone: phone,
         name: name,
+        citizenship: citizenship,
         dob: birthDate,
         document: document,
         bankInfo: bankInfo,
@@ -93,44 +91,21 @@ class KycRepository extends ChangeNotifier {
     );
   }
 
-  Future<void> initEmailVerification({required String emailId}) =>
-      _initWrapper(() => _kycUserClient.initEmailValidation(dataId: emailId));
+  Future<void> initEmailVerification({required String dataHash}) =>
+      _initWrapper(() => _kycUserClient.initEmailValidation(dataHash: dataHash));
 
-  Future<void> verifyEmail({
-    required String code,
-    required String dataId,
-  }) async {
-    await _initWrapper(
-      () => _kycUserClient.validateEmail(code: code, dataId: dataId),
-    );
+  Future<void> verifyEmail({required String code, required String dataHash}) async {
+    await _initWrapper(() => _kycUserClient.validateEmail(code: code, dataHash: dataHash));
   }
 
-  Future<void> initPhoneVerification({required String phoneId}) =>
-      _initWrapper(() => _kycUserClient.initPhoneValidation(dataId: phoneId));
+  Future<void> initPhoneVerification({required String dataHash}) =>
+      _initWrapper(() => _kycUserClient.initPhoneValidation(dataHash: dataHash));
 
-  Future<void> verifyPhone({
-    required String code,
-    required String dataId,
-  }) =>
-      _initWrapper(
-        () => _kycUserClient.validatePhone(code: code, dataId: dataId),
-      );
+  Future<void> verifyPhone({required String code, required String dataId}) =>
+      _initWrapper(() => _kycUserClient.validatePhone(code: code, dataHash: dataId));
 
-  Future<void> initKycVerification({
-    required String nameId,
-    required String birthDateId,
-    required String documentId,
-    required String selfieImageId,
-  }) async {
-    await _initWrapper(
-      () => _kycUserClient.initDocumentValidation(
-        nameId: nameId,
-        birthDateId: birthDateId,
-        documentId: documentId,
-        selfieImageId: selfieImageId,
-      ),
-    );
-  }
+  Future<void> startKycVerification({required String country, required List<String> dataHashes}) =>
+      _initWrapper(() => _kycUserClient.startKycRequest(country: country, dataHashes: dataHashes));
 
   Future<String> createOnRampOrder({
     required double cryptoAmount,
@@ -139,48 +114,80 @@ class KycRepository extends ChangeNotifier {
     required String fiatCurrency,
     required String partnerPK,
     required String cryptoWalletAddress,
-  }) =>
-      _initWrapper(
-        () => _kycUserClient.createOnRampOrder(
-          partnerPK: partnerPK,
-          cryptoAmount: cryptoAmount,
-          cryptoCurrency: cryptoCurrency,
-          fiatAmount: fiatAmount,
-          fiatCurrency: fiatCurrency,
-          cryptoWalletAddress: cryptoWalletAddress,
-        ),
-      );
+    required String walletPK,
+  }) => _initWrapper(
+    () => _kycUserClient.createOnRampOrder(
+      partnerPK: partnerPK,
+      cryptoAmount: cryptoAmount,
+      cryptoCurrency: cryptoCurrency,
+      fiatAmount: fiatAmount,
+      fiatCurrency: fiatCurrency,
+      cryptoWalletAddress: cryptoWalletAddress,
+      walletPK: walletPK,
+    ),
+  );
 
   Future<String> createOffRampOrder({
     required double cryptoAmount,
     required String cryptoCurrency,
     required double fiatAmount,
     required String fiatCurrency,
+    required String cryptoWalletAddress,
     required String partnerPK,
     required String bankName,
     required String bankAccount,
-  }) =>
-      _initWrapper(
-        () => _kycUserClient.createOffRampOrder(
-          partnerPK: partnerPK,
-          cryptoAmount: cryptoAmount,
-          cryptoCurrency: cryptoCurrency,
-          fiatAmount: fiatAmount,
-          fiatCurrency: fiatCurrency,
-          bankName: bankName,
-          bankAccount: bankAccount,
-        ),
-      );
+    required String walletPK,
+  }) => _initWrapper(
+    () => _kycUserClient.createOffRampOrder(
+      partnerPK: partnerPK,
+      cryptoAmount: cryptoAmount,
+      cryptoCurrency: cryptoCurrency,
+      cryptoWalletAddress: cryptoWalletAddress,
+      fiatAmount: fiatAmount,
+      fiatCurrency: fiatCurrency,
+      bankName: bankName,
+      bankAccount: bankAccount,
+      walletPK: walletPK,
+    ),
+  );
 
-  Future<Order> fetchOrder(String orderId) => _initWrapper(
-        () => _kycUserClient.getOrder(orderId: OrderId.fromOrderId(orderId)),
-      );
+  Future<Order> fetchOrder(String orderId) =>
+      _initWrapper(() => _kycUserClient.getOrder(orderId: OrderId.fromOrderId(orderId)));
 
-  Future<void> grantPartnerAccess(String partnerPk) => _initWrapper(
-        () => _kycUserClient.grantPartnerAccess(partnerPk),
-      );
+  Future<void> grantPartnerAccess(String partnerPk) =>
+      _initWrapper(() => _kycUserClient.grantPartnerAccess(partnerPk));
 
-  Future<void> grantValidatorAccess() => _initWrapper(
-        () => _kycUserClient.grantPartnerAccess(_config.verifierAuthPk),
-      );
+  Future<void> grantValidatorAccess() =>
+      _initWrapper(() => _kycUserClient.grantPartnerAccess(_config.verifierAuthPk));
+
+  Future<bool> hasGrantedAccess(String partnerPk) =>
+      _initWrapper(() => _kycUserClient.hasGrantedAccess(partnerPk));
+
+  Future<PartnerModel> fetchPartnerInfo(String partnerPk) =>
+      _initWrapper(() => _kycUserClient.getPartnerInfo(partnerPK: partnerPk));
+
+  Future<KycValidationStatus> fetchKycStatus({required String country}) => _initWrapper(
+    () => _kycUserClient.getKycStatus(userPK: _kycUserClient.authPublicKey, country: country),
+  ).then((value) => value.toKycValidationStatus());
+
+  Future<KycRequirement> getKycRequirements({required String country}) =>
+      _initWrapper(() => _kycUserClient.getKycRequirements(country: country));
+
+  Future<Quote> getQuote({
+    required String partnerPK,
+    required String walletPK,
+    required String fiatCurrency,
+    required double cryptoAmount,
+    required RampType rampType,
+  }) => _initWrapper(
+    () => _kycUserClient.getQuote(
+      fiatCurrency: fiatCurrency,
+      cryptoAmount: cryptoAmount,
+      partnerPK: partnerPK,
+      walletPK: walletPK,
+      rampType: rampType,
+    ),
+  );
 }
+
+const walletAuthPk = '3GEEuaKKs6wrmi8Z8GEafmEC524Tx6wvFHfCp36tTQut';

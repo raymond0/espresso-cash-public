@@ -9,9 +9,9 @@ class SolanaClient {
     required Uri rpcUrl,
     required Uri websocketUrl,
     Duration timeout = const Duration(seconds: 30),
-  })  : rpcClient = RpcClient(rpcUrl.toString(), timeout: timeout),
-        _timeout = timeout,
-        _websocketUrl = websocketUrl;
+  }) : rpcClient = RpcClient(rpcUrl.toString(), timeout: timeout),
+       _timeout = timeout,
+       _websocketUrl = websocketUrl;
 
   final RpcClient rpcClient;
   final Uri _websocketUrl;
@@ -28,17 +28,10 @@ class SolanaClient {
     required Commitment commitment,
   }) async {
     final bh = await rpcClient.getLatestBlockhash(commitment: commitment).value;
-    final tx = await signTransaction(
-      bh,
-      message,
-      signers,
-    );
+    final tx = await signTransaction(bh, message, signers);
     await onSigned(tx.signatures.first.toBase58());
 
-    final signature = await rpcClient.sendTransaction(
-      tx.encode(),
-      preflightCommitment: commitment,
-    );
+    final signature = await rpcClient.sendTransaction(tx.encode(), preflightCommitment: commitment);
 
     await waitForSignatureStatus(signature, status: commitment);
 
@@ -93,19 +86,10 @@ class SolanaClient {
     }
   }
 
-  SubscriptionClient createSubscriptionClient({
-    Duration? pingInterval,
-    Duration? connectTimeout,
-  }) =>
-      SubscriptionClient(
-        _websocketUrl,
-        pingInterval: pingInterval,
-        connectTimeout: connectTimeout,
-      );
+  SubscriptionClient createSubscriptionClient({Duration? pingInterval, Duration? connectTimeout}) =>
+      SubscriptionClient(_websocketUrl, pingInterval: pingInterval, connectTimeout: connectTimeout);
 }
 
-typedef SignatureCallback = FutureOr<void> Function(
-  TransactionId transactionId,
-);
+typedef SignatureCallback = FutureOr<void> Function(TransactionId transactionId);
 
 void ignoreOnSigned(TransactionId _) {}

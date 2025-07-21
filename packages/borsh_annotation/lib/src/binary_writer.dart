@@ -4,18 +4,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 class BinaryWriter {
-  BinaryWriter();
-
   ByteData buf = ByteData(_initialLength);
   int length = 0;
 
   void _maybeResize() {
     if (buf.lengthInBytes >= 16 + length) return;
 
-    final list = Uint8List.fromList([
-      ...buf.buffer.asUint8List(),
-      ...Uint8List(_initialLength),
-    ]);
+    final list = Uint8List.fromList([...buf.buffer.asUint8List(), ...Uint8List(_initialLength)]);
     buf = list.buffer.asByteData();
   }
 
@@ -79,14 +74,15 @@ class BinaryWriter {
 const _initialLength = 1024;
 
 Iterable<int> _encodeBigIntAsUnsigned(BigInt number, int s) {
-  if (number == BigInt.zero) {
+  BigInt n = number;
+  if (n == BigInt.zero) {
     return List.filled(s, 0);
   }
 
   final result = Uint8List(s);
   for (int i = 0; i < s; i++) {
-    result[i] = (number & _byteMask).toInt();
-    number = number >> 8;
+    result[i] = (n & _byteMask).toInt();
+    n = n >> 8;
   }
 
   return result;

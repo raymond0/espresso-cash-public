@@ -1,60 +1,52 @@
-import 'dart:math';
-
-import 'package:espressocash_api/espressocash_api.dart';
-
+import 'package:ec_client_dart/ec_client_dart.dart';
 import 'package:injectable/injectable.dart';
 import 'package:solana/solana.dart';
 
+import '../../../config.dart';
 import '../../currency/models/amount.dart';
 import '../../currency/models/currency.dart';
-import '../../ramp_partner/models/ramp_partner.dart';
 import '../../tokens/token.dart';
 import '../models/fee_type.dart';
 
 @injectable
 class FeeCalculator {
-  const FeeCalculator(this._ecClient, this._solanaClient);
+  const FeeCalculator(this._ecClient);
 
   final EspressoCashClient _ecClient;
-  final SolanaClient _solanaClient;
 
-  Future<CryptoAmount> call(FeeType type) => _ecClient.getFees().then(
-        (fees) async {
-          switch (type) {
-            case FeeTypeDirect(:final address):
-              return await _hasUsdcAta(address)
-                  ? fees.directPayment.ataExists
-                  : fees.directPayment.ataDoesNotExist;
-            case FeeTypeLink():
-              return fees.escrowPayment;
-            case FeeTypeWithdraw(:final amount, :final partner, :final address):
-              final percentageFee = switch (partner) {
-                RampPartner.scalex ||
-                RampPartner.scalexBrij =>
-                  fees.withdrawFeePercentage.scalex,
-                RampPartner.coinflow => fees.withdrawFeePercentage.coinflow,
-                RampPartner.guardarian => fees.withdrawFeePercentage.guardarian,
-                RampPartner.rampNetwork =>
-                  fees.withdrawFeePercentage.rampNetwork,
-                RampPartner.kado => fees.withdrawFeePercentage.kado,
-                RampPartner.brij || RampPartner.moneygram => 0,
-              };
-              final percentageFeeAmount = (amount * percentageFee).ceil();
+  Future<CryptoAmount> call(FeeType type) => switch (type) {
+    FeeTypeDirect(:final address, :final token) => _getDirectPaymentFee(
+      address: address,
+      token: token,
+    ),
+    FeeTypeLink() => _getLinkPaymentFee(),
+    FeeTypeWithdraw(:final address) => _getWithdrawFee(address),
+  };
 
-              final accountCreationFeeAmount = address == null
-                  ? 0
-                  : await _hasUsdcAta(address)
-                      ? fees.directPayment.ataExists
-                      : fees.directPayment.ataDoesNotExist;
+  Future<CryptoAmount> _getDirectPaymentFee({
+    required Ed25519HDPublicKey address,
+    required Token token,
+  }) =>
+      token.isSolana
+          ? Future.value(solTransferFee)
+          : _ecClient
+              .getDirectPaymentQuote(
+                DirectPaymentQuoteRequestDto(
+                  receiverAccount: address.toBase58(),
+                  amount: 0,
+                  mintAddress: token.address,
+                ),
+              )
+              .then((quote) => CryptoAmount(value: quote.fee, cryptoCurrency: Currency.usdc));
 
-              return max(percentageFeeAmount, accountCreationFeeAmount);
-          }
-        },
-      ).then((fee) => CryptoAmount(value: fee, cryptoCurrency: Currency.usdc));
+  Future<CryptoAmount> _getLinkPaymentFee() => _ecClient.getOutgoingEscrowPaymentQuote().then(
+    (quote) => CryptoAmount(value: quote.fee, cryptoCurrency: Currency.usdc),
+  );
 
-  Future<bool> _hasUsdcAta(Ed25519HDPublicKey address) =>
-      _solanaClient.hasAssociatedTokenAccount(
-        owner: address,
-        mint: Token.usdc.publicKey,
-      );
+  Future<CryptoAmount> _getWithdrawFee(Ed25519HDPublicKey? address) =>
+      address == null
+          ? Future.value(const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc))
+          : _getDirectPaymentFee(address: address, token: Token.usdc);
 }
+
+const solTransferFee = CryptoAmount(value: 1 * lamportsPerSignature, cryptoCurrency: Currency.sol);

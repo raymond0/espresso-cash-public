@@ -28,8 +28,7 @@ class ODPLinkListener extends StatefulWidget {
   State<ODPLinkListener> createState() => _ODPLinkListenerState();
 }
 
-class _ODPLinkListenerState extends State<ODPLinkListener>
-    with DynamicLinkHandler {
+class _ODPLinkListenerState extends State<ODPLinkListener> with DynamicLinkHandler {
   @override
   bool handleDynamicLink(Uri uri) {
     final solanaPayRequest = tryParseSolanaPayRequest(uri);
@@ -54,13 +53,13 @@ class _ODPLinkListenerState extends State<ODPLinkListener>
 
     final amount = request.amount
         .maybeFlatMap((it) => Amount.fromDecimal(value: it, currency: crypto))
+        // ignore: avoid-type-casts, controlled type
         .maybeFlatMap((it) => it as CryptoAmount)
         .maybeFlatMap((it) => it.toFiatAmount(fiat, ratesRepository: rates))
-        .ifNull(() => const FiatAmount(value: 0, fiatCurrency: Currency.usd));
+        .ifNull(() => const FiatAmount(value: 0, fiatCurrency: fiat));
 
-    final formatted = amount.value == 0
-        ? ''
-        : amount.format(DeviceLocale.localeOf(context), skipSymbol: true);
+    final formatted =
+        amount.value == 0 ? '' : amount.format(DeviceLocale.localeOf(context), skipSymbol: true);
 
     final isPaid = await context.isSolanaPayRequestPaid(request: request);
     if (!mounted) return;
@@ -83,10 +82,8 @@ class _ODPLinkListenerState extends State<ODPLinkListener>
     if (confirmedFiatAmount == null) return;
     if (!mounted) return;
 
-    final confirmedCryptoAmount = amount
-        .copyWithDecimal(confirmedFiatAmount)
-        .toTokenAmount(Token.usdc)
-        ?.decimal;
+    final confirmedCryptoAmount =
+        amount.copyWithDecimal(confirmedFiatAmount).toTokenAmount(Token.usdc)?.decimal;
 
     if (confirmedCryptoAmount == null) return;
 

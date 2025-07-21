@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:decimal/decimal.dart';
 import 'package:dfunc/dfunc.dart';
-import 'package:espressocash_api/espressocash_api.dart';
+import 'package:ec_client_dart/ec_client_dart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -77,32 +77,31 @@ class PaymentRequestService implements Disposable {
       return const Stream<void>.empty().listen(null);
     }
 
-    Stream<TransactionId> solanaPayTransaction() => _solanaClient
-        .findSolanaPayTransaction(
-          reference: reference,
-          commitment: Commitment.confirmed,
-        )
-        .asStream()
-        .whereType<TransactionId>();
+    Stream<TransactionId> solanaPayTransaction() =>
+        _solanaClient
+            .findSolanaPayTransaction(reference: reference, commitment: Commitment.confirmed)
+            .asStream()
+            .whereType<TransactionId>();
 
     return Stream<void>.periodic(interval)
         .flatMap((a) => solanaPayTransaction())
-        .mergeWith([solanaPayTransaction()]).listen(
-      (id) {
-        _verifyTx(id, request);
-      },
-      onError: (_) async {
-        _currentBackoffs[request.id] =
-            (_currentBackoffs[request.id] ?? _minBackoff) * _backoffStep;
+        .mergeWith([solanaPayTransaction()])
+        .listen(
+          (id) {
+            _verifyTx(id, request);
+          },
+          onError: (_) async {
+            _currentBackoffs[request.id] =
+                (_currentBackoffs[request.id] ?? _minBackoff) * _backoffStep;
 
-        if (_currentBackoffs[request.id]! > _maxBackoff) {
-          _currentBackoffs[request.id] = _maxBackoff;
-        }
-        await Future<void>.delayed(_currentBackoffs[request.id]!);
+            if (_currentBackoffs[request.id]! > _maxBackoff) {
+              _currentBackoffs[request.id] = _maxBackoff;
+            }
+            await Future<void>.delayed(_currentBackoffs[request.id]!);
 
-        _subscribe(request);
-      },
-    );
+            _subscribe(request);
+          },
+        );
   }
 
   Future<void> _verifyTx(TransactionId id, PaymentRequest request) async {
@@ -116,9 +115,8 @@ class PaymentRequestService implements Disposable {
         commitment: Commitment.confirmed,
       );
 
-      final timestamp = txDetails.blockTime?.let(
-            (it) => DateTime.fromMillisecondsSinceEpoch(it * 1000),
-          ) ??
+      final timestamp =
+          txDetails.blockTime?.let((it) => DateTime.fromMillisecondsSinceEpoch(it * 1000)) ??
           DateTime.now();
 
       await _repository.save(
@@ -129,17 +127,14 @@ class PaymentRequestService implements Disposable {
         ),
       );
 
-      _analyticsManager.paymentRequestLinkPaid(
-        amount: request.payRequest.amount ?? Decimal.zero,
-      );
+      _analyticsManager.paymentRequestLinkPaid(amount: request.payRequest.amount ?? Decimal.zero);
 
       _refreshBalance();
 
       await _subscriptions[request.id]?.cancel();
       await _watcher?.cancel();
     } on Exception {
-      _currentBackoffs[request.id] =
-          (_currentBackoffs[request.id] ?? _minBackoff) * _backoffStep;
+      _currentBackoffs[request.id] = (_currentBackoffs[request.id] ?? _minBackoff) * _backoffStep;
       if (_currentBackoffs[request.id]! > _maxBackoff) {
         _currentBackoffs[request.id] = _maxBackoff;
       }
@@ -199,7 +194,7 @@ class PaymentRequestService implements Disposable {
   }
 
   Future<Uri> unshortenLink(String shortLink) => _ecClient
-      .unshortenLink(UnshortenLinkRequestDto(shortLink: shortLink))
+      .expandLink(UnshortenLinkRequestDto(shortLink: shortLink))
       .then((e) => Uri.parse(e.fullLink));
 
   @override

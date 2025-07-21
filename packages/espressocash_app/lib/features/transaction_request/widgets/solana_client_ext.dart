@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-commented-out-code
+
 import 'package:borsh_annotation/borsh_annotation.dart';
 import 'package:dfunc/dfunc.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -32,8 +34,7 @@ extension SolanaClientExt on SolanaClient {
 
     if (simulation.value.err != null) return null;
 
-    final postBalance =
-        simulation.value.accounts?.first.data?.parseTokenBalance();
+    final postBalance = simulation.value.accounts?.first.data?.parseTokenBalance();
     final preBalance = await rpcClient
         .getAccountInfo(
           tokenAddress.toBase58(),
@@ -44,10 +45,7 @@ extension SolanaClientExt on SolanaClient {
 
     if (postBalance == null || preBalance == null) return null;
 
-    return (
-      amountTransferred: preBalance - postBalance,
-      slot: simulation.context.slot,
-    );
+    return (amountTransferred: preBalance - postBalance, slot: simulation.context.slot);
   }
 }
 

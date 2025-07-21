@@ -26,7 +26,7 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Assign', () async {
@@ -42,7 +42,7 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Transfer', () async {
@@ -60,7 +60,7 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Create account with seed', () async {
@@ -88,15 +88,16 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Create nonce account', () async {
     final fromKey = await Ed25519HDKeyPair.random();
     final nonceKey = await Ed25519HDKeyPair.random();
     final authorized = nonceKey;
-    final lamports = await client.rpcClient
-        .getMinimumBalanceForRentExemption(SystemProgram.nonceAccountSize);
+    final lamports = await client.rpcClient.getMinimumBalanceForRentExemption(
+      SystemProgram.nonceAccountSize,
+    );
 
     await client.requestAirdrop(
       address: fromKey.publicKey,
@@ -117,15 +118,16 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Create nonce account fails for insufficient lamports', () async {
     final nonceKey = await Ed25519HDKeyPair.random();
     final fromKey = await _createFundedKey(client);
     final authorized = fromKey;
-    final lamports = await client.rpcClient
-        .getMinimumBalanceForRentExemption(SystemProgram.nonceAccountSize);
+    final lamports = await client.rpcClient.getMinimumBalanceForRentExemption(
+      SystemProgram.nonceAccountSize,
+    );
 
     final instructions = SystemInstruction.createAndInitializeNonceAccount(
       fromPubKey: fromKey.publicKey,
@@ -139,22 +141,19 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, throwsA(isA<JsonRpcException>()));
+    await expectLater(future, throwsA(isA<JsonRpcException>()));
   });
 
   test('Advance nonce account', () async {
     final fromKey = await _createFundedKey(client);
-    final nonceKey = await _createNonceAccount(
-      fromKey,
-      client,
-    );
+    final nonceKey = await _createNonceAccount(fromKey, client);
 
     final instruction = SystemInstruction.advanceNonceAccount(
       nonce: nonceKey.publicKey,
       nonceAuthority: fromKey.publicKey,
     );
 
-    expect(
+    await expectLater(
       client.sendAndConfirmTransaction(
         message: Message.only(instruction),
         signers: [fromKey],
@@ -193,7 +192,7 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Assign with seed', () async {
@@ -217,22 +216,19 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Allocate', () async {
     final fromKey = await _createFundedKey(client);
-    final instruction = SystemInstruction.allocate(
-      account: fromKey.publicKey,
-      space: 100,
-    );
+    final instruction = SystemInstruction.allocate(account: fromKey.publicKey, space: 100);
     final future = client.sendAndConfirmTransaction(
       message: Message.only(instruction),
       signers: [fromKey],
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Allocate with seed', () async {
@@ -255,29 +251,24 @@ void main() {
       commitment: Commitment.confirmed,
     );
 
-    expect(future, completes);
+    await expectLater(future, completes);
   });
 
   test('Withdraw nonce account', () async {
     final fromKey = await _createFundedKey(client);
-    final nonceKey = await _createNonceAccount(
-      fromKey,
-      client,
-      extraLamports: 100,
-    );
+    final nonceKey = await _createNonceAccount(fromKey, client, extraLamports: 100);
     final toKey = await Ed25519HDKeyPair.random();
 
     final instruction = SystemInstruction.withdrawNonceAccount(
       nonce: nonceKey.publicKey,
       nonceAuthority: fromKey.publicKey,
       recipient: toKey.publicKey,
-      lamports: 100 +
-          await client.rpcClient.getMinimumBalanceForRentExemption(
-            SystemProgram.nonceAccountSize,
-          ),
+      lamports:
+          100 +
+          await client.rpcClient.getMinimumBalanceForRentExemption(SystemProgram.nonceAccountSize),
     );
 
-    expect(
+    await expectLater(
       client.sendAndConfirmTransaction(
         message: Message.only(instruction),
         signers: [fromKey],
@@ -298,7 +289,7 @@ void main() {
       newAuthority: newAuthority.publicKey,
     );
 
-    expect(
+    await expectLater(
       client.sendAndConfirmTransaction(
         message: Message.only(instruction),
         signers: [fromKey],
@@ -327,8 +318,9 @@ Future<Ed25519HDKeyPair> _createNonceAccount(
   int extraLamports = 0,
 }) async {
   final nonceKey = await Ed25519HDKeyPair.random();
-  final lamports = await client.rpcClient
-      .getMinimumBalanceForRentExemption(SystemProgram.nonceAccountSize);
+  final lamports = await client.rpcClient.getMinimumBalanceForRentExemption(
+    SystemProgram.nonceAccountSize,
+  );
 
   final instructions = SystemInstruction.createAndInitializeNonceAccount(
     fromPubKey: nonceAuthority.publicKey,

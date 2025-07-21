@@ -1,53 +1,44 @@
-import 'package:json_annotation/json_annotation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:solana/src/rpc/dto/account_data/account_data.dart';
 import 'package:solana/src/rpc/dto/context.dart';
 import 'package:solana/src/rpc/helpers.dart';
 
+part 'account.freezed.dart';
+
 part 'account.g.dart';
 
 /// An account
-@JsonSerializable()
-class Account {
-  const Account({
-    required this.lamports,
-    required this.owner,
-    required this.data,
-    required this.executable,
-    required this.rentEpoch,
-  });
+@freezed
+class Account with _$Account {
+  const factory Account({
+    /// Number of lamports assigned to this account, as a u64
+    required int lamports,
 
-  factory Account.fromJson(Map<String, dynamic> json) =>
-      _$AccountFromJson(json);
+    /// base-58 encoded Pubkey of the program this account has been
+    /// assigned to
+    required String owner,
 
-  /// Number of lamports assigned to this account, as a u64
-  final int lamports;
+    /// Data associated with the account, either as encoded binary
+    /// data or JSON format {program: state}, depending on
+    /// encoding parameter
+    required AccountData? data,
 
-  /// base-58 encoded Pubkey of the program this account has been
-  /// assigned to
-  final String owner;
+    /// Boolean indicating if the account contains a program (and
+    /// is strictly read-only)
+    required bool executable,
 
-  /// Data associated with the account, either as encoded binary
-  /// data or JSON format {<program>: <state>}, depending on
-  /// encoding parameter
-  final AccountData? data;
+    /// The epoch at which this account will next owe rent, as u64
+    @JsonKey(fromJson: bigIntFromJson) required BigInt rentEpoch,
+  }) = _Account;
 
-  /// Boolean indicating if the account contains a program (and
-  /// is strictly read-only)
-  final bool executable;
-
-  /// The epoch at which this account will next owe rent, as u64
-  @JsonKey(fromJson: bigIntFromNum)
-  final BigInt rentEpoch;
-
-  Map<String, dynamic> toJson() => _$AccountToJson(this);
+  factory Account.fromJson(Map<String, dynamic> json) => _$AccountFromJson(json);
 }
 
 @JsonSerializable()
 class AccountResult extends ContextResult<Account?> {
   const AccountResult({required super.context, required super.value});
 
-  factory AccountResult.fromJson(Map<String, dynamic> json) =>
-      _$AccountResultFromJson(json);
+  factory AccountResult.fromJson(Map<String, dynamic> json) => _$AccountResultFromJson(json);
 
   Map<String, dynamic> toJson() => _$AccountResultToJson(this);
 }

@@ -9,8 +9,7 @@ IList<RampPartner> getOnRampPartners(String? countryCode) {
 
   final partners = <RampPartner>{};
 
-  final isMoneygramEnabled =
-      sl<FeatureFlagsManager>().isMoneygramAccessEnabled();
+  final isMoneygramEnabled = sl<FeatureFlagsManager>().isMoneygramAccessEnabled();
 
   if (isMoneygramEnabled && _moneygramOnRampCountries.contains(countryCode)) {
     partners.add(RampPartner.moneygram);
@@ -20,17 +19,11 @@ IList<RampPartner> getOnRampPartners(String? countryCode) {
     partners.add(RampPartner.kado);
   }
 
-  final isBrijEnabled = sl<FeatureFlagsManager>().isBrijEnabled();
+  final isBrijPartnerEnabled =
+      sl<FeatureFlagsManager>().isBrijEnabled() && sl<FeatureFlagsManager>().isBrijDemoEnabled();
 
-  if (isBrijEnabled && _brijCountries.contains(countryCode)) {
+  if (isBrijPartnerEnabled && _brijCountries.contains(countryCode)) {
     partners.add(RampPartner.brij);
-  }
-
-  if (_scalexCountries.contains(countryCode)) {
-    final isScalexBrijEnabled = sl<FeatureFlagsManager>().isScalexBrijEnabled();
-
-    partners
-        .add(isScalexBrijEnabled ? RampPartner.scalexBrij : RampPartner.scalex);
   }
 
   partners.add(RampPartner.rampNetwork);
@@ -47,8 +40,7 @@ IList<RampPartner> getOffRampPartners(String? countryCode) {
 
   final partners = <RampPartner>{};
 
-  final isMoneygramEnabled =
-      sl<FeatureFlagsManager>().isMoneygramAccessEnabled();
+  final isMoneygramEnabled = sl<FeatureFlagsManager>().isMoneygramAccessEnabled();
 
   if (isMoneygramEnabled && _moneygramOffRampCountries.contains(countryCode)) {
     partners.add(RampPartner.moneygram);
@@ -58,17 +50,11 @@ IList<RampPartner> getOffRampPartners(String? countryCode) {
     partners.add(RampPartner.coinflow);
   }
 
-  final isBrijEnabled = sl<FeatureFlagsManager>().isBrijEnabled();
+  final isBrijPartnerEnabled =
+      sl<FeatureFlagsManager>().isBrijEnabled() && sl<FeatureFlagsManager>().isBrijDemoEnabled();
 
-  if (isBrijEnabled && _brijCountries.contains(countryCode)) {
+  if (isBrijPartnerEnabled && _brijCountries.contains(countryCode)) {
     partners.add(RampPartner.brij);
-  }
-
-  if (_scalexCountries.contains(countryCode)) {
-    final isScalexBrijEnabled = sl<FeatureFlagsManager>().isScalexBrijEnabled();
-
-    partners
-        .add(isScalexBrijEnabled ? RampPartner.scalexBrij : RampPartner.scalex);
   }
 
   return IList(partners);
@@ -87,8 +73,6 @@ const _coinflowCountries = {
   'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'MC',
   'NL', 'NO', 'PL', 'PT', 'RO', 'SM', 'SK', 'SI', 'ES', 'SE', 'CH', 'US',
 };
-
-const _scalexCountries = {'NG'};
 
 const _moneygramOnRampCountries = {
   'AO', 'AR', 'AU', 'BH', 'BF', 'KH', 'CA', 'CV', 'CL', 'CD', 'CI', 'DK', //
@@ -114,4 +98,4 @@ const _moneygramOffRampCountries = {
   'UZ', 'VU', 'VE', 'VN', 'VG', 'VI', 'ZM',
 };
 
-const _brijCountries = {'NG'};
+const _brijCountries = {'NG', 'ES'};

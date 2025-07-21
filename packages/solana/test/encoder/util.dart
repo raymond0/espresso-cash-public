@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_positional_boolean_parameters
+// ignore_for_file: avoid_positional_boolean_parameters, more readable
 
 import 'package:solana/solana.dart';
 import 'package:solana/src/encoder/account_meta.dart';
@@ -39,5 +39,4 @@ AccountMeta createAccountMeta(
   bool isSigner,
   // ignore: prefer-named-boolean-parameters, test usage
   bool isWriteable,
-) =>
-    AccountMeta(pubKey: pubKey, isWriteable: isWriteable, isSigner: isSigner);
+) => AccountMeta(pubKey: pubKey, isWriteable: isWriteable, isSigner: isSigner);

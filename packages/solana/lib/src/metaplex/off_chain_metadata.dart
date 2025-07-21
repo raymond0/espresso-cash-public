@@ -17,15 +17,15 @@ class OffChainMetadata {
     required this.collection,
   });
 
-  factory OffChainMetadata.fromJson(Map<String, dynamic> json) =>
-      _$OffChainMetadataFromJson(json);
+  factory OffChainMetadata.fromJson(Map<String, dynamic> json) => _$OffChainMetadataFromJson(json);
 
   final String name;
   final String description;
   final String symbol;
   final String image;
-  final Properties properties;
+  @JsonKey(defaultValue: <Attribute>[])
   final List<Attribute> attributes;
+  final Properties? properties;
   final Collection? collection;
 
   Map<String, dynamic> toJson() => _$OffChainMetadataToJson(this);

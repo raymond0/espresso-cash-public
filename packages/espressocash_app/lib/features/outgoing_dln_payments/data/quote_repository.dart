@@ -1,4 +1,4 @@
-import 'package:espressocash_api/espressocash_api.dart';
+import 'package:ec_client_dart/ec_client_dart.dart';
 
 import 'package:injectable/injectable.dart';
 
@@ -10,9 +10,7 @@ import '../models/payment_quote.dart';
 
 @injectable
 class QuoteRepository {
-  const QuoteRepository({
-    required EspressoCashClient ecClient,
-  }) : _client = ecClient;
+  const QuoteRepository({required EspressoCashClient ecClient}) : _client = ecClient;
 
   final EspressoCashClient _client;
 
@@ -21,8 +19,8 @@ class QuoteRepository {
     required String receiverAddress,
     required Blockchain receiverBlockchain,
   }) async {
-    final quote = await _client.getDlnQuote(
-      PaymentQuoteRequestDto(
+    final quote = await _client.getOutgoingDlnQuote(
+      OutgoingQuoteRequestDto(
         amount: amount.value,
         receiverAddress: receiverAddress,
         receiverBlockchain: receiverBlockchain.name,
@@ -35,18 +33,9 @@ class QuoteRepository {
         receiverAddress: receiverAddress,
         receiverBlockchain: receiverBlockchain,
       ),
-      receiverAmount: CryptoAmount(
-        cryptoCurrency: Currency.usdc,
-        value: quote.receiverAmount,
-      ),
-      inputAmount: CryptoAmount(
-        cryptoCurrency: Currency.usdc,
-        value: quote.inputAmount,
-      ),
-      fee: CryptoAmount(
-        cryptoCurrency: Currency.usdc,
-        value: quote.feeInUsdc,
-      ),
+      receiverAmount: CryptoAmount(cryptoCurrency: Currency.usdc, value: quote.receiverAmount),
+      inputAmount: CryptoAmount(cryptoCurrency: Currency.usdc, value: quote.inputAmount),
+      fee: CryptoAmount(cryptoCurrency: Currency.usdc, value: quote.feeInUsdc),
       encodedTx: quote.encodedTx,
       slot: quote.slot,
     );

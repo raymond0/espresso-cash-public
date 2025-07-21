@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-duplicate-constant-values
+
 import 'package:decimal/decimal.dart';
 import '../../../gen/assets.gen.dart';
 import 'payment_methods.dart';
@@ -31,11 +33,7 @@ enum RampPartner {
   coinflow(
     title: 'Coinflow',
     minimumAmount: r'$20',
-    paymentMethods: [
-      PaymentMethod.visa,
-      PaymentMethod.mastercard,
-      PaymentMethod.bank,
-    ],
+    paymentMethods: [PaymentMethod.visa, PaymentMethod.mastercard, PaymentMethod.bank],
   ),
 
   guardarian(
@@ -51,30 +49,13 @@ enum RampPartner {
     ],
   ),
 
-  scalex(
-    title: 'Scalex',
-    minimumAmount: r'$5',
-    paymentMethods: [PaymentMethod.bank],
-  ),
-
-  moneygram(
-    title: 'MoneyGram',
-    minimumAmount: r'$10',
-    paymentMethods: [],
-  ),
+  moneygram(title: 'MoneyGram', minimumAmount: r'$10', paymentMethods: []),
 
   brij(
-    title: 'Brij Network',
+    title: 'Brij Network (DEMO)',
     minimumAmount: r'$5',
     paymentMethods: [PaymentMethod.bank],
     partnerPK: '9YmsP8PoWfNaTwBjLRy8R5Yr9Ukcu2hvVvzea8mRpnKp',
-  ),
-
-  scalexBrij(
-    title: 'Scalex',
-    minimumAmount: r'$5',
-    paymentMethods: [PaymentMethod.bank],
-    partnerPK: '342yN5YEX6bgGaTCuprVquFXhpZ8twyPzBo5kMZWQpDQ',
   );
 
   const RampPartner({
@@ -87,30 +68,19 @@ enum RampPartner {
   final String title;
   final String minimumAmount;
   final List<PaymentMethod> paymentMethods;
+
   final String? partnerPK;
 
-  Decimal get minimumAmountInDecimal =>
-      Decimal.parse(minimumAmount.substring(1));
+  Decimal get minimumAmountInDecimal => Decimal.parse(minimumAmount.substring(1));
 }
 
 extension RampPartnerAssets on RampPartner {
-  AssetGenImage get logo {
-    switch (this) {
-      case RampPartner.kado:
-        return Assets.brands.kado;
-      case RampPartner.rampNetwork:
-        return Assets.brands.ramp;
-      case RampPartner.coinflow:
-        return Assets.brands.coinflow;
-      case RampPartner.guardarian:
-        return Assets.brands.guardarian;
-      case RampPartner.scalex:
-      case RampPartner.scalexBrij:
-        return Assets.brands.scalex;
-      case RampPartner.moneygram:
-        return Assets.brands.moneygram;
-      case RampPartner.brij:
-        return Assets.brands.brij;
-    }
-  }
+  AssetGenImage get logo => switch (this) {
+    RampPartner.kado => Assets.brands.kado,
+    RampPartner.rampNetwork => Assets.brands.ramp,
+    RampPartner.coinflow => Assets.brands.coinflow,
+    RampPartner.guardarian => Assets.brands.guardarian,
+    RampPartner.moneygram => Assets.brands.moneygram,
+    RampPartner.brij => Assets.brands.brij,
+  };
 }

@@ -1,5 +1,7 @@
+// ignore_for_file: avoid-adjacent-strings
+
 import 'package:dfunc/src/either/either.dart';
-import 'package:espressocash_api/espressocash_api.dart';
+import 'package:ec_client_dart/ec_client_dart.dart';
 import 'package:espressocash_app/data/db/db.dart';
 import 'package:espressocash_app/features/tokens/data/extensions.dart';
 import 'package:espressocash_app/features/tokens/data/token_repository.dart';
@@ -32,14 +34,11 @@ void main() {
         isStablecoin: false,
       );
 
-      when(mockRepo.getToken('So00000000000'))
-          .thenAnswer((_) async => token.toModel());
+      when(mockRepo.getToken('So00000000000')).thenAnswer((_) async => token.toModel());
 
       final Token? response = await mockRepo.getToken('So00000000000');
 
-      verify(
-        mockRepo.getToken('So00000000000'),
-      ).called(1);
+      verify(mockRepo.getToken('So00000000000')).called(1);
 
       expect(response, token.toModel());
     });
@@ -210,8 +209,35 @@ class MemoryTokenRepository implements TokenRepository {
   final data = BehaviorSubject<TokenMap>.seeded(TokenMap());
 
   @override
-  Future<Token?> getToken(String address) async =>
-      data.value[address]?.toModel();
+  Future<Token?> getToken(String address) async => data.value[address]?.toModel();
+
+  @override
+  Future<List<Token>> search(String query) async {
+    if (query.isEmpty) return [];
+
+    final searchQuery = query.toLowerCase();
+
+    return data.value.values
+        .where(
+          (token) =>
+              token.symbol.toLowerCase().contains(searchQuery) ||
+              token.name.toLowerCase().contains(searchQuery),
+        )
+        .map((t) => t.toModel())
+        .toList();
+  }
+
+  @override
+  Future<List<Token>> fetchBySymbols(List<String> symbols) async {
+    if (symbols.isEmpty) return [];
+
+    final lowerSymbols = symbols.map((s) => s.toLowerCase()).toSet();
+
+    return data.value.values
+        .where((token) => lowerSymbols.contains(token.symbol.toLowerCase()))
+        .map((t) => t.toModel())
+        .toList();
+  }
 
   @override
   Future<Either<Exception, String>> init() {
@@ -221,31 +247,29 @@ class MemoryTokenRepository implements TokenRepository {
     final lines = chunk.split('\n');
     final List<TokenRow> rows =
         lines.skip(1).where((line) => line.trim().isNotEmpty).map((line) {
-      final values = line.split(',');
-      if (values.length >= 8) {
-        return TokenRow(
-          address: values[0],
-          chainId: int.parse(values[1]),
-          symbol: values[2],
-          name: values[3],
-          decimals: int.parse(values[4]),
-          logoURI: values[5],
-          isStablecoin: false,
-        );
-      }
-      throw Exception('Invalid line format');
-    }).toList();
+          final values = line.split(',');
+          if (values.length >= 8) {
+            return TokenRow(
+              address: values[0],
+              chainId: int.parse(values[1]),
+              symbol: values[2],
+              name: values[3],
+              decimals: int.parse(values[4]),
+              logoURI: values[5],
+              isStablecoin: false,
+            );
+          }
+          throw Exception('Invalid line format');
+        }).toList();
 
-    final tokenMap =
-        Map.fromEntries(rows.map((row) => MapEntry(row.address, row)));
+    final tokenMap = Map.fromEntries(rows.map((row) => MapEntry(row.address, row)));
     data.add(data.value.addAll(tokenMap.lock));
 
     return Future.value(const Right(''));
   }
 
   void insertTokens(List<TokenRow> tokens) {
-    final tokenMap =
-        Map.fromEntries(tokens.map((token) => MapEntry(token.address, token)));
+    final tokenMap = Map.fromEntries(tokens.map((token) => MapEntry(token.address, token)));
     data.add(data.value.addAll(tokenMap.lock));
   }
 

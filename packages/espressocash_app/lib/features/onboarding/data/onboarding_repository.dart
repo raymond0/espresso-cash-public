@@ -13,6 +13,7 @@ class OnboardingRepository extends ChangeNotifier {
   }
 
   final SharedPreferences _storage;
+  // ignore: dispose-class-fields, false positive
   final ProfileRepository _profileRepository;
   final MyAccount _account;
 
@@ -28,8 +29,7 @@ class OnboardingRepository extends ChangeNotifier {
       _storage.setBool(_ofacCheckPerformedKey, true);
     }
 
-    if (_account.accessMode == const AccessMode.seedInputted() &&
-        !hasConfirmedPassphrase) {
+    if (_account.accessMode == const AccessMode.seedInputted() && !hasConfirmedPassphrase) {
       hasConfirmedPassphrase = true;
     }
   }
@@ -38,8 +38,7 @@ class OnboardingRepository extends ChangeNotifier {
 
   bool get hasFinishedOnboarding => _profileRepository.hasAllRequiredFields;
 
-  bool get hasConfirmedPassphrase =>
-      _storage.getBool(_passphraseConfirmedKey) ?? false;
+  bool get hasConfirmedPassphrase => _storage.getBool(_passphraseConfirmedKey) ?? false;
 
   set hasConfirmedPassphrase(bool value) {
     _storage.setBool(_passphraseConfirmedKey, value);

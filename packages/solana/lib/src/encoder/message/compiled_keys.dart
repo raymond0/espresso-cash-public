@@ -7,10 +7,7 @@ import 'package:solana/src/encoder/message_address_table_lookup.dart';
 import 'package:solana/src/encoder/message_header.dart';
 
 class CompiledKeys {
-  const CompiledKeys({
-    required this.payer,
-    required this.keyMetaMap,
-  });
+  const CompiledKeys({required this.payer, required this.keyMetaMap});
 
   factory CompiledKeys.compile({
     required List<Instruction> instructions,
@@ -18,15 +15,10 @@ class CompiledKeys {
   }) {
     final keyMetaMap = <String, CompiledKeyMeta>{};
 
-    CompiledKeyMeta getOrInsertDefault(Ed25519HDPublicKey pubkey) =>
-        keyMetaMap.putIfAbsent(
-          pubkey.toBase58(),
-          () => const CompiledKeyMeta(
-            isSigner: false,
-            isWritable: false,
-            isInvoked: false,
-          ),
-        );
+    CompiledKeyMeta getOrInsertDefault(Ed25519HDPublicKey pubkey) => keyMetaMap.putIfAbsent(
+      pubkey.toBase58(),
+      () => const CompiledKeyMeta(isSigner: false, isWritable: false, isInvoked: false),
+    );
 
     final payerKeyMeta = getOrInsertDefault(payer);
     keyMetaMap[payer.toBase58()] = CompiledKeyMeta(
@@ -83,27 +75,18 @@ class CompiledKeys {
       numReadonlyUnsignedAccounts: readonlyNonSigners.length,
     );
 
-    {
-      assert(
-        writableSigners.isNotEmpty,
-        'Expected at least one writable signer key',
-      );
-      final payerAddress = writableSigners.first.key;
-      assert(
-        payerAddress == payer.toBase58(),
-        'Expected first writable signer key to be the fee payer',
-      );
-    }
+    assert(writableSigners.isNotEmpty, 'Expected at least one writable signer key');
+    final payerAddress = writableSigners.first.key;
+    assert(
+      payerAddress == payer.toBase58(),
+      'Expected first writable signer key to be the fee payer',
+    );
 
     final staticAccountKeys = [
-      ...writableSigners
-          .map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
-      ...readonlySigners
-          .map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
-      ...writableNonSigners
-          .map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
-      ...readonlyNonSigners
-          .map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
+      ...writableSigners.map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
+      ...readonlySigners.map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
+      ...writableNonSigners.map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
+      ...readonlyNonSigners.map((entry) => Ed25519HDPublicKey.fromBase58(entry.key)),
     ];
 
     return MessageComponents(header, staticAccountKeys);
@@ -112,16 +95,14 @@ class CompiledKeys {
   TableLookupResult? extractTableLookup(AddressLookupTableAccount lookupTable) {
     final writableDrainedKeys = _drainKeysFoundInLookupTable(
       lookupTable.state.addresses,
-      (keyMeta) =>
-          !keyMeta.isSigner && !keyMeta.isInvoked && keyMeta.isWritable,
+      (keyMeta) => !keyMeta.isSigner && !keyMeta.isInvoked && keyMeta.isWritable,
     );
     final writableIndexes = writableDrainedKeys.lookupTableIndexes;
     final drainedWritableKeys = writableDrainedKeys.drainedKeys;
 
     final readOnlyDrainedKeys = _drainKeysFoundInLookupTable(
       lookupTable.state.addresses,
-      (keyMeta) =>
-          !keyMeta.isSigner && !keyMeta.isInvoked && !keyMeta.isWritable,
+      (keyMeta) => !keyMeta.isSigner && !keyMeta.isInvoked && !keyMeta.isWritable,
     );
     final readonlyIndexes = readOnlyDrainedKeys.lookupTableIndexes;
     final drainedReadonlyKeys = readOnlyDrainedKeys.drainedKeys;
@@ -137,10 +118,7 @@ class CompiledKeys {
       readonlyIndexes: readonlyIndexes,
     );
 
-    final keys = LoadedAddresses(
-      writable: drainedWritableKeys,
-      readonly: drainedReadonlyKeys,
-    );
+    final keys = LoadedAddresses(writable: drainedWritableKeys, readonly: drainedReadonlyKeys);
 
     return TableLookupResult(lookup: lookup, keys: keys);
   }
@@ -160,8 +138,7 @@ class CompiledKeys {
       if (keyMetaFilter(keyMeta)) {
         final address = entry.key;
         final key = Ed25519HDPublicKey.fromBase58(address);
-        final lookupTableIndex =
-            lookupTableEntries.indexWhere((entry) => entry == key);
+        final lookupTableIndex = lookupTableEntries.indexWhere((entry) => entry == key);
         if (lookupTableIndex >= 0) {
           if (lookupTableIndex >= 256) {
             throw const FormatException('Max lookup table index exceeded');
@@ -173,18 +150,12 @@ class CompiledKeys {
       }
     }
 
-    return DrainedKeys(
-      lookupTableIndexes: lookupTableIndexes,
-      drainedKeys: drainedKeys,
-    );
+    return DrainedKeys(lookupTableIndexes: lookupTableIndexes, drainedKeys: drainedKeys);
   }
 }
 
 class DrainedKeys {
-  const DrainedKeys({
-    required this.lookupTableIndexes,
-    required this.drainedKeys,
-  });
+  const DrainedKeys({required this.lookupTableIndexes, required this.drainedKeys});
 
   final List<int> lookupTableIndexes;
   final List<Ed25519HDPublicKey> drainedKeys;

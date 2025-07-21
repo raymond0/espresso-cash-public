@@ -1,4 +1,4 @@
-// ignore_for_file: cast_nullable_to_non_nullable, avoid-unnecessary-late
+// ignore_for_file: cast_nullable_to_non_nullable, avoid-unnecessary-late, avoid-type-casts
 
 import 'dart:async';
 
@@ -13,11 +13,84 @@ import 'config.dart';
 const int _transferredAmount = lamportsPerSol;
 
 void main() {
+  group('Instance equality', () {
+    test('Account', () {
+      final accounts = <(Account, Account)>[
+        (
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': 0,
+          }),
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': '0',
+          }),
+        ),
+        // Web max precise.
+        (
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': 0x20000000000000,
+          }),
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': '0x20000000000000',
+          }),
+        ),
+        // 64-bit native.
+        (
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': 0x7FFFFFFFFFFFFFFF,
+          }),
+          Account.fromJson({
+            'lamports': 0,
+            'owner': SystemProgram.programId,
+            'executable': false,
+            'rentEpoch': '0x7FFFFFFFFFFFFFFF',
+          }),
+        ),
+      ];
+      for (final pair in accounts) {
+        expect(pair.$1 == pair.$2, true);
+      }
+    });
+
+    test('Context', () {
+      final contexts = <(Context, Context)>[
+        (Context.fromJson({'slot': 0}), Context.fromJson({'slot': '0'})),
+        // Web max precise.
+        (
+          Context.fromJson({'slot': 0x20000000000000}),
+          Context.fromJson({'slot': '0x20000000000000'}),
+        ),
+        // 64-bit native.
+        (
+          Context.fromJson({'slot': 0x7FFFFFFFFFFFFFFF}),
+          Context.fromJson({'slot': '0x7FFFFFFFFFFFFFFF'}),
+        ),
+      ];
+      for (final pair in contexts) {
+        expect(pair.$1 == pair.$2, true);
+      }
+    });
+  });
+
   group('Timeout exceptions', () {
     test('throws exception with method name on timeout', () {
       final client = RpcClient(devnetRpcUrl, timeout: Duration.zero);
 
-      expect(
+      expectLater(
         client.getTransactionCount(),
         throwsA(
           isA<RpcTimeoutException>().having(
@@ -48,7 +121,7 @@ void main() {
         ),
       ];
 
-      expect(
+      expectLater(
         client.getMultipleTransactions(transactions),
         throwsA(
           isA<RpcTimeoutException>().having(
@@ -71,13 +144,8 @@ void main() {
     int currentBalance = 0;
 
     setUpAll(() async {
-      destination = await Ed25519HDKeyPair.fromMnemonic(
-        generateMnemonic(),
-      ); // generateMnemonic());
-      source = await Ed25519HDKeyPair.fromMnemonic(
-        generateMnemonic(),
-        account: 1,
-      );
+      destination = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic());
+      source = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic(), account: 1);
 
       currentBalance = await _createTokenAccount(client, source);
     });
@@ -90,13 +158,9 @@ void main() {
         commitment: Commitment.confirmed,
       );
       expect(signature, isNot(null));
-      await client.waitForSignatureStatus(
-        signature,
-        status: ConfirmationStatus.confirmed,
-      );
-      final int balance = await client.rpcClient
-          .getBalance(source.address, commitment: Commitment.confirmed)
-          .value;
+      await client.waitForSignatureStatus(signature, status: ConfirmationStatus.confirmed);
+      final int balance =
+          await client.rpcClient.getBalance(source.address, commitment: Commitment.confirmed).value;
       // Update the global balance
       currentBalance += addedBalance;
       // Check that it matches
@@ -104,9 +168,7 @@ void main() {
     });
 
     test('Read the recent blockhash', () async {
-      final bh = await client.rpcClient
-          .getLatestBlockhash(commitment: Commitment.confirmed)
-          .value;
+      final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
       final blockHash = RecentBlockhash(
         blockhash: bh.blockhash,
         feeCalculator: const FeeCalculator(lamportsPerSignature: 500),
@@ -119,20 +181,20 @@ void main() {
     });
 
     test('Read the balance of an account', () async {
-      final int balance = await client.rpcClient
-          .getBalance(source.address, commitment: Commitment.confirmed)
-          .value;
+      final int balance =
+          await client.rpcClient.getBalance(source.address, commitment: Commitment.confirmed).value;
       expect(balance, currentBalance);
     });
 
     test('Get all the account information of an account', () async {
-      final Account? accountInfo = await client.rpcClient
-          .getAccountInfo(
-            source.address,
-            encoding: Encoding.jsonParsed,
-            commitment: Commitment.confirmed,
-          )
-          .value;
+      final Account? accountInfo =
+          await client.rpcClient
+              .getAccountInfo(
+                source.address,
+                encoding: Encoding.jsonParsed,
+                commitment: Commitment.confirmed,
+              )
+              .value;
       expect(accountInfo, isNotNull);
       expect(accountInfo?.lamports, currentBalance);
       expect(accountInfo?.owner, SystemProgram.programId);
@@ -140,9 +202,7 @@ void main() {
     });
 
     test('Simulate a transfer', () async {
-      final bh = await client.rpcClient
-          .getLatestBlockhash(commitment: Commitment.confirmed)
-          .value;
+      final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
       final instruction = SystemInstruction.transfer(
         fundingAccount: source.publicKey,
         recipientAccount: destination.publicKey,
@@ -152,19 +212,15 @@ void main() {
         message: Message.only(instruction),
         recentBlockhash: bh.blockhash,
       );
-      final TransactionStatus transferResult = await client.rpcClient
-          .simulateTransaction(
-            signedTx.encode(),
-            commitment: Commitment.confirmed,
-          )
-          .value;
+      final TransactionStatus transferResult =
+          await client.rpcClient
+              .simulateTransaction(signedTx.encode(), commitment: Commitment.confirmed)
+              .value;
       expect(transferResult.err, isNull);
     });
 
     test('Transfer SOL', () async {
-      final bh = await client.rpcClient
-          .getLatestBlockhash(commitment: Commitment.confirmed)
-          .value;
+      final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
       final instruction = SystemInstruction.transfer(
         fundingAccount: source.publicKey,
         recipientAccount: destination.publicKey,
@@ -180,22 +236,18 @@ void main() {
       );
       expect(signature, signedTx.signatures.first.toBase58());
       await expectLater(
-        client.waitForSignatureStatus(
-          signature,
-          status: ConfirmationStatus.confirmed,
-        ),
+        client.waitForSignatureStatus(signature, status: ConfirmationStatus.confirmed),
         completes,
       );
-      final int balance = await client.rpcClient
-          .getBalance(destination.address, commitment: Commitment.confirmed)
-          .value;
+      final int balance =
+          await client.rpcClient
+              .getBalance(destination.address, commitment: Commitment.confirmed)
+              .value;
       expect(balance, greaterThan(0));
     });
 
     test('Transfer SOL to the same address', () async {
-      final bh = await client.rpcClient
-          .getLatestBlockhash(commitment: Commitment.confirmed)
-          .value;
+      final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
       final instruction = SystemInstruction.transfer(
         fundingAccount: source.publicKey,
         recipientAccount: source.publicKey,
@@ -231,10 +283,7 @@ void main() {
     });
 
     test('List recent transactions for multiple addresses', () async {
-      final secondWallet = await Ed25519HDKeyPair.fromMnemonic(
-        generateMnemonic(),
-        account: 2,
-      );
+      final secondWallet = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic(), account: 2);
 
       await client.rpcClient.requestAirdrop(
         secondWallet.address,
@@ -242,10 +291,10 @@ void main() {
         commitment: Commitment.confirmed,
       );
 
-      final txs = await client.rpcClient.getTransactionListForAddresses(
-        [source.publicKey, secondWallet.publicKey],
-        commitment: Commitment.confirmed,
-      );
+      final txs = await client.rpcClient.getTransactionListForAddresses([
+        source.publicKey,
+        secondWallet.publicKey,
+      ], commitment: Commitment.confirmed);
 
       expect(txs, isNot(null));
 
@@ -257,9 +306,7 @@ void main() {
     });
 
     test('Transfer SOL with Versioned Transaction', () async {
-      final bh = await client.rpcClient
-          .getLatestBlockhash(commitment: Commitment.confirmed)
-          .value;
+      final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
       final instruction = SystemInstruction.transfer(
         fundingAccount: source.publicKey,
         recipientAccount: destination.publicKey,
@@ -274,10 +321,7 @@ void main() {
       );
       final sign = await source.sign(compiledMessage.toByteArray());
 
-      final SignedTx signedTx = SignedTx(
-        signatures: [sign],
-        compiledMessage: compiledMessage,
-      );
+      final SignedTx signedTx = SignedTx(signatures: [sign], compiledMessage: compiledMessage);
 
       final String signature = await client.rpcClient.sendTransaction(
         signedTx.encode(),
@@ -285,15 +329,13 @@ void main() {
       );
       expect(signature, signedTx.signatures.first.toBase58());
       await expectLater(
-        client.waitForSignatureStatus(
-          signature,
-          status: ConfirmationStatus.confirmed,
-        ),
+        client.waitForSignatureStatus(signature, status: ConfirmationStatus.confirmed),
         completes,
       );
-      final int balance = await client.rpcClient
-          .getBalance(destination.address, commitment: Commitment.confirmed)
-          .value;
+      final int balance =
+          await client.rpcClient
+              .getBalance(destination.address, commitment: Commitment.confirmed)
+              .value;
       expect(balance, greaterThan(0));
 
       final transaction = await client.rpcClient.getTransaction(
@@ -326,18 +368,12 @@ void main() {
         commitment: Commitment.confirmed,
       );
 
-      await client.waitForSignatureStatus(
-        signature,
-        status: Commitment.confirmed,
-      );
+      await client.waitForSignatureStatus(signature, status: Commitment.confirmed);
 
       int balance = await client.rpcClient.getBalance(wallet.address).value;
       expect(balance, equals(0));
 
-      await client.waitForSignatureStatus(
-        signature,
-        status: Commitment.finalized,
-      );
+      await client.waitForSignatureStatus(signature, status: Commitment.finalized);
       balance = await client.rpcClient.getBalance(wallet.address).value;
 
       expect(balance, greaterThan(0));
@@ -351,14 +387,10 @@ void main() {
         commitment: Commitment.confirmed,
       );
 
-      await client.waitForSignatureStatus(
-        signature,
-        status: Commitment.confirmed,
-      );
+      await client.waitForSignatureStatus(signature, status: Commitment.confirmed);
 
-      final int balance = await client.rpcClient
-          .getBalance(wallet.address, commitment: Commitment.confirmed)
-          .value;
+      final int balance =
+          await client.rpcClient.getBalance(wallet.address, commitment: Commitment.confirmed).value;
       expect(balance, greaterThan(0));
     });
 
@@ -390,14 +422,15 @@ void main() {
         commitment: Commitment.confirmed,
       );
 
-      final accounts = await client.rpcClient
-          .getTokenAccountsByOwner(
-            accountKeyPair.address,
-            const TokenAccountsFilter.byProgramId(TokenProgram.programId),
-            encoding: Encoding.jsonParsed,
-            commitment: Commitment.confirmed,
-          )
-          .value;
+      final accounts =
+          await client.rpcClient
+              .getTokenAccountsByOwner(
+                accountKeyPair.address,
+                const TokenAccountsFilter.byProgramId(TokenProgram.programId),
+                encoding: Encoding.jsonParsed,
+                commitment: Commitment.confirmed,
+              )
+              .value;
 
       expect(accounts.length, equals(1));
       expect(accounts.first.pubkey, tokenAccount.pubkey);
@@ -427,8 +460,7 @@ void main() {
       );
     });
 
-    test('Call to getVersion() succeeds and parses the response correctly',
-        () async {
+    test('Call to getVersion() succeeds and parses the response correctly', () async {
       final version = await client.rpcClient.getVersion();
 
       expect(version.solanaCore.codeUnitAt(0), anyOf(equals(49), equals(50)));
@@ -436,113 +468,95 @@ void main() {
     });
 
     test('Call to getSlot() succeeds', () async {
-      final slot = await client.rpcClient.getSlot(
-        commitment: Commitment.finalized,
-      );
+      final slot = await client.rpcClient.getSlot(commitment: Commitment.finalized);
       expect(slot, greaterThan(0));
     });
 
     test('Call to getSupply() succeeds with default parameters', () async {
-      final supply = await client.rpcClient
-          .getSupply(commitment: Commitment.finalized)
-          .value;
+      final supply = await client.rpcClient.getSupply(commitment: Commitment.finalized).value;
 
       expect(supply.total, equals(supply.circulating + supply.nonCirculating));
       expect(supply.nonCirculatingAccounts.length, greaterThan(0));
     });
 
-    test('Call to getSupply() succeeds with circulating accounts list',
-        () async {
-      final supply = await client.rpcClient
-          .getSupply(
-            commitment: Commitment.finalized,
-            excludeNonCirculatingAccountsList: false,
-          )
-          .value;
+    test('Call to getSupply() succeeds with circulating accounts list', () async {
+      final supply =
+          await client.rpcClient
+              .getSupply(commitment: Commitment.finalized, excludeNonCirculatingAccountsList: false)
+              .value;
 
       expect(supply.total, equals(supply.circulating + supply.nonCirculating));
       expect(supply.nonCirculatingAccounts.length, greaterThan(0));
     });
 
-    test('Call to getSupply() succeeds excluding circulating accounts list',
-        () async {
-      final supply = await client.rpcClient
-          .getSupply(
-            commitment: Commitment.confirmed,
-            excludeNonCirculatingAccountsList: true,
-          )
-          .value;
+    test('Call to getSupply() succeeds excluding circulating accounts list', () async {
+      final supply =
+          await client.rpcClient
+              .getSupply(commitment: Commitment.confirmed, excludeNonCirculatingAccountsList: true)
+              .value;
 
       expect(supply.total, equals(supply.circulating + supply.nonCirculating));
       expect(supply.nonCirculatingAccounts.length, equals(0));
     });
 
-    test('Call to getLeaderSchedule() succeeds with default parameters',
-        () async {
+    test('Call to getLeaderSchedule() succeeds with default parameters', () async {
       // FIXME: should not need the parameter (fix the generator)
       final leaderSchedule = await client.rpcClient.getLeaderSchedule(null);
       expect(leaderSchedule, isNotNull);
     });
 
-    test('Call to getLargerAccounts() succeeds with default parameters',
-        () async {
+    test('Call to getLargerAccounts() succeeds with default parameters', () async {
       final largestAccounts = await client.rpcClient.getLargestAccounts().value;
       expect(largestAccounts.length, equals(20));
     });
 
     test('Call to getLargerAccounts() succeeds with commitment', () async {
-      final largestAccounts = await client.rpcClient
-          .getLargestAccounts(commitment: Commitment.processed)
-          .value;
+      final largestAccounts =
+          await client.rpcClient.getLargestAccounts(commitment: Commitment.processed).value;
       expect(largestAccounts.length, equals(20));
     });
 
-    test('Call to getLargerAccounts() succeeds with filter: circulating',
-        () async {
-      final largestAccounts = await client.rpcClient
-          .getLargestAccounts(filter: CirculationStatus.circulating)
-          .value;
+    test('Call to getLargerAccounts() succeeds with filter: circulating', () async {
+      final largestAccounts =
+          await client.rpcClient.getLargestAccounts(filter: CirculationStatus.circulating).value;
       expect(largestAccounts.length, equals(20));
     });
 
-    test('Call to getLargerAccounts() succeeds with filter: non-circulating',
-        () async {
-      final largestAccounts = await client.rpcClient
-          .getLargestAccounts(filter: CirculationStatus.nonCirculating)
-          .value;
+    test('Call to getLargerAccounts() succeeds with filter: non-circulating', () async {
+      final largestAccounts =
+          await client.rpcClient.getLargestAccounts(filter: CirculationStatus.nonCirculating).value;
       expect(largestAccounts.length, equals(0));
     });
 
-    test('Call to getMultipleAccounts() succeeds with jsonParsed encoding',
-        () async {
+    test('Call to getMultipleAccounts() succeeds with jsonParsed encoding', () async {
       final largestAccounts = await client.rpcClient.getLargestAccounts().value;
 
-      final accounts = await client.rpcClient
-          .getMultipleAccounts(
-            largestAccounts.map((l) => l.address).toList(),
-            encoding: Encoding.jsonParsed,
-          )
-          .value;
+      final accounts =
+          await client.rpcClient
+              .getMultipleAccounts(
+                largestAccounts.map((l) => l.address).toList(),
+                encoding: Encoding.jsonParsed,
+              )
+              .value;
 
       expect(accounts.length, equals(largestAccounts.length));
     });
 
-    test('Call to getMultipleAccounts() succeeds with base64 encoding',
-        () async {
+    test('Call to getMultipleAccounts() succeeds with base64 encoding', () async {
       final largestAccounts = await client.rpcClient.getLargestAccounts().value;
 
-      final accounts = await client.rpcClient
-          .getMultipleAccounts(
-            largestAccounts.map((l) => l.address).toList(),
-            encoding: Encoding.base64,
-          )
-          .value;
+      final accounts =
+          await client.rpcClient
+              .getMultipleAccounts(
+                largestAccounts.map((l) => l.address).toList(),
+                encoding: Encoding.base64,
+              )
+              .value;
 
       expect(accounts.length, equals(largestAccounts.length));
     });
 
-    test('Call to getMultipleAccounts() succeeds with base58 encoding',
-        () async {
+    test('Call to getMultipleAccounts() succeeds with base58 encoding', () async {
       final largestAccounts = await client.rpcClient.getLargestAccounts().value;
 
       final future = client.rpcClient.getMultipleAccounts(
@@ -550,8 +564,7 @@ void main() {
         encoding: Encoding.base58,
       );
 
-      // It throws because some accounts are too large for base58
-      expect(future, throwsA(isA<JsonRpcException>()));
+      await expectLater(future, throwsA(isA<JsonRpcException>()));
     });
 
     test('Call to getBlockProduction() succeeds', () async {
@@ -559,26 +572,20 @@ void main() {
       expect(blockProduction.value.range.firstSlot, isNonNegative);
     });
 
-    test(
-      'Call to getTokenLargestAccounts succeeds',
-      () async {
-        final wallet = await Ed25519HDKeyPair.random();
-        final token = await _createToken(
-          decimals: 0,
-          supply: 1,
-          transferSomeToAddress: wallet.publicKey,
-          transferSomeToAmount: 1,
-        );
-        final List<TokenLargestAccount> result = await client.rpcClient
-            .getTokenLargestAccounts(
-              token.address.toBase58(),
-              commitment: Commitment.confirmed,
-            )
-            .value;
-        expect(result, isNotEmpty);
-      },
-      timeout: const Timeout(Duration(minutes: 3)),
-    );
+    test('Call to getTokenLargestAccounts succeeds', () async {
+      final wallet = await Ed25519HDKeyPair.random();
+      final token = await _createToken(
+        decimals: 0,
+        supply: 1,
+        transferSomeToAddress: wallet.publicKey,
+        transferSomeToAmount: 1,
+      );
+      final List<TokenLargestAccount> result =
+          await client.rpcClient
+              .getTokenLargestAccounts(token.address.toBase58(), commitment: Commitment.confirmed)
+              .value;
+      expect(result, isNotEmpty);
+    }, timeout: const Timeout(Duration(minutes: 3)));
 
     test('Call to getGenesisHash() succeeds', () async {
       final genesisHash = await client.rpcClient.getGenesisHash();
@@ -608,17 +615,11 @@ void main() {
       expect(inflationGovernor.foundation, isNonNegative);
     });
 
-    test(
-      'Call to getInflationReward() succeeds',
-      () async {
-        final inflationReward = await client.rpcClient.getInflationReward(
-          [sampleSigner.address],
-        );
+    test('Call to getInflationReward() succeeds', () async {
+      final inflationReward = await client.rpcClient.getInflationReward([sampleSigner.address]);
 
-        expect(inflationReward.length, greaterThan(0));
-      },
-      skip: 'Needs too many slots to correctly work',
-    );
+      expect(inflationReward.length, greaterThan(0));
+    }, skip: 'Needs too many slots to correctly work');
 
     test('Call to getClusterNodes() succeeds', () async {
       final clusterNodes = await client.rpcClient.getClusterNodes();
@@ -639,9 +640,7 @@ void main() {
     });
 
     test('Call to getEpochInfo() succeeds with commitment', () async {
-      final epochInfo = await client.rpcClient.getEpochInfo(
-        commitment: Commitment.finalized,
-      );
+      final epochInfo = await client.rpcClient.getEpochInfo(commitment: Commitment.finalized);
 
       expect(epochInfo.absoluteSlot, greaterThan(0));
     });
@@ -653,8 +652,7 @@ void main() {
 
     test('Call to isBlockhashValid() succeeds', () async {
       final bh = await client.rpcClient.getLatestBlockhash().value;
-      final bool isBlockhashValid =
-          await client.rpcClient.isBlockhashValid(bh.blockhash).value;
+      final bool isBlockhashValid = await client.rpcClient.isBlockhashValid(bh.blockhash).value;
 
       expect(isBlockhashValid, true);
     });
@@ -669,15 +667,11 @@ void main() {
       expect(blockhash.value.blockhash, isNotEmpty);
     });
 
-    test(
-      'Call to getStakeMinimumDelegation() succeeds',
-      () async {
-        final stakeMinimumDelegation =
-            await client.rpcClient.getStakeMinimumDelegation();
+    test('Call to getStakeMinimumDelegation() succeeds', () async {
+      final stakeMinimumDelegation = await client.rpcClient.getStakeMinimumDelegation();
 
-        expect(stakeMinimumDelegation.value, isA<int>());
-      },
-    );
+      expect(stakeMinimumDelegation.value, isA<int>());
+    });
 
     test('Call to getFirstAvailableBlock() succeeds', () async {
       final block = await client.rpcClient.getFirstAvailableBlock();
@@ -700,13 +694,11 @@ void main() {
     });
 
     test('Call to getMinimumBalanceForRentExemption() succeeds', () async {
-      final maxRetransmitSlot =
-          await client.rpcClient.getMinimumBalanceForRentExemption(302);
+      final maxRetransmitSlot = await client.rpcClient.getMinimumBalanceForRentExemption(302);
       expect(maxRetransmitSlot, isA<int>());
     });
 
-    test('Call to getProgramAccounts() with jsonParsed encoding succeeds',
-        () async {
+    test('Call to getProgramAccounts() with jsonParsed encoding succeeds', () async {
       final programAccounts = await client.rpcClient.getProgramAccounts(
         TokenProgram.programId,
         encoding: Encoding.jsonParsed,
@@ -725,12 +717,10 @@ void main() {
 
         expect(programAccounts.length, greaterThan(0));
       },
-      skip:
-          'We cannot guess the size of the account, so we cannot test this for now',
+      skip: 'We cannot guess the size of the account, so we cannot test this for now',
     );
 
-    test('Call to getProgramAccounts() with base64 encoding succeeds',
-        () async {
+    test('Call to getProgramAccounts() with base64 encoding succeeds', () async {
       final programAccounts = await client.rpcClient.getProgramAccounts(
         TokenProgram.programId,
         encoding: Encoding.base64,
@@ -749,8 +739,7 @@ void main() {
       expect(programAccounts.length, equals(0));
     });
 
-    test('Call to getProgramAccounts() with dataSize filter succeeds',
-        () async {
+    test('Call to getProgramAccounts() with dataSize filter succeeds', () async {
       final programAccounts = await client.rpcClient.getProgramAccounts(
         TokenProgram.programId,
         encoding: Encoding.jsonParsed,
@@ -765,28 +754,18 @@ void main() {
       expect(slotLeader, _validAddressMatcher);
     });
 
-    test(
-      'Call to getSlotLeaders() succeeds',
-      () async {
-        final slotLeaders = await client.rpcClient.getSlotLeaders(0, 4);
+    test('Call to getSlotLeaders() succeeds', () async {
+      final slotLeaders = await client.rpcClient.getSlotLeaders(0, 4);
 
-        expect(slotLeaders.length, lessThanOrEqualTo(4));
-        expect(slotLeaders.every(isValidAddress), equals(true));
-      },
-      skip: 'Leader schedule for epoch 0 is unavailable',
-    );
+      expect(slotLeaders.length, lessThanOrEqualTo(4));
+      expect(slotLeaders.every(isValidAddress), equals(true));
+    }, skip: 'Leader schedule for epoch 0 is unavailable');
 
     test('Call to getVoteAccounts() succeeds', () async {
       final voteAccounts = await client.rpcClient.getVoteAccounts();
 
-      expect(
-        voteAccounts.delinquent.every((va) => isValidAddress(va.votePubkey)),
-        equals(true),
-      );
-      expect(
-        voteAccounts.current.every((va) => isValidAddress(va.votePubkey)),
-        equals(true),
-      );
+      expect(voteAccounts.delinquent.every((va) => isValidAddress(va.votePubkey)), equals(true));
+      expect(voteAccounts.current.every((va) => isValidAddress(va.votePubkey)), equals(true));
     });
 
     test('Call to minimumLedgerSlot() succeeds', () async {
@@ -794,9 +773,7 @@ void main() {
       expect(minimumLedgerSlot, greaterThanOrEqualTo(0));
     });
 
-    test(
-        'Call to getAccountInfo() succeeds with base58 works for the right data size',
-        () async {
+    test('Call to getAccountInfo() succeeds with base58 works for the right data size', () async {
       final accountAddress = await _createAccount(client, 128);
 
       final account = await client.rpcClient.getAccountInfo(
@@ -808,8 +785,7 @@ void main() {
       expect(account.value, isNotNull);
     });
 
-    test('Call to getAccountInfo() succeeds with base58 throws for large data',
-        () async {
+    test('Call to getAccountInfo() succeeds with base58 throws for large data', () async {
       final accountAddress = await _createAccount(client, 130);
 
       final future = client.rpcClient.getAccountInfo(
@@ -818,7 +794,7 @@ void main() {
         commitment: Commitment.confirmed,
       );
 
-      expect(future, throwsA(isA<JsonRpcException>()));
+      await expectLater(future, throwsA(isA<JsonRpcException>()));
     });
 
     test('Call to getAccountInfo() succeeds with base64 encoding', () async {
@@ -835,14 +811,8 @@ void main() {
   });
 }
 
-Future<int> _createTokenAccount(
-  SolanaClient client,
-  Ed25519HDKeyPair source,
-) async {
-  final accountKeyPair = await Ed25519HDKeyPair.fromMnemonic(
-    generateMnemonic(),
-    account: 0,
-  );
+Future<int> _createTokenAccount(SolanaClient client, Ed25519HDKeyPair source) async {
+  final accountKeyPair = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic(), account: 0);
   await client.requestAirdrop(
     address: source.publicKey,
     lamports: 10 * lamportsPerSol,
@@ -851,7 +821,7 @@ Future<int> _createTokenAccount(
 
   final token = await _createToken(
     decimals: 2,
-    supply: 100000000000000,
+    supply: 100_000_000_000_000,
     transferSomeToAddress: source.publicKey,
     transferSomeToAmount: 1000,
   );
@@ -868,9 +838,7 @@ Future<int> _createTokenAccount(
     space: TokenProgram.neededAccountSpace,
   );
 
-  final bh = await client.rpcClient
-      .getLatestBlockhash(commitment: Commitment.confirmed)
-      .value;
+  final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.confirmed).value;
   final recentBlockhash = RecentBlockhash(
     blockhash: bh.blockhash,
     feeCalculator: const FeeCalculator(lamportsPerSignature: 5000),
@@ -888,15 +856,9 @@ Future<int> _createTokenAccount(
 }
 
 Future<String> _createAccount(SolanaClient client, int size) async {
-  final source = await Ed25519HDKeyPair.fromMnemonic(
-    generateMnemonic(),
-    account: 0,
-  );
+  final source = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic(), account: 0);
 
-  final accountKeyPair = await Ed25519HDKeyPair.fromMnemonic(
-    generateMnemonic(),
-    account: 0,
-  );
+  final accountKeyPair = await Ed25519HDKeyPair.fromMnemonic(generateMnemonic(), account: 0);
 
   await client.requestAirdrop(
     address: source.publicKey,
@@ -914,23 +876,14 @@ Future<String> _createAccount(SolanaClient client, int size) async {
     ),
     space: size,
   );
-  final bh = await client.rpcClient
-      .getLatestBlockhash(commitment: Commitment.finalized)
-      .value;
+  final bh = await client.rpcClient.getLatestBlockhash(commitment: Commitment.finalized).value;
 
-  final signedTx = await signTransaction(
-    bh,
-    Message.only(instruction),
-    [source, accountKeyPair],
-  );
+  final signedTx = await signTransaction(bh, Message.only(instruction), [source, accountKeyPair]);
   final signature = await client.rpcClient.sendTransaction(
     signedTx.encode(),
     preflightCommitment: Commitment.confirmed,
   );
-  await client.waitForSignatureStatus(
-    signature,
-    status: ConfirmationStatus.confirmed,
-  );
+  await client.waitForSignatureStatus(signature, status: ConfirmationStatus.confirmed);
 
   return accountKeyPair.address;
 }
@@ -941,12 +894,10 @@ class _AddressMatcher extends Matcher {
   const _AddressMatcher();
 
   @override
-  Description describe(Description description) =>
-      description.add('is valid address');
+  Description describe(Description description) => description.add('is valid address');
 
   @override
-  bool matches(covariant String item, Map<dynamic, dynamic> matchState) =>
-      isValidAddress(item);
+  bool matches(covariant String item, Map<dynamic, dynamic> matchState) => isValidAddress(item);
 }
 
 Future<Mint> _createToken({
@@ -1021,8 +972,5 @@ Future<Mint> _createToken({
     commitment: Commitment.confirmed,
   );
 
-  return client.getMint(
-    address: splToken.address,
-    commitment: Commitment.confirmed,
-  );
+  return client.getMint(address: splToken.address, commitment: Commitment.confirmed);
 }

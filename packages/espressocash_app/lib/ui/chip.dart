@@ -18,27 +18,17 @@ class CpChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: ShapeDecoration(
-          color: backgroundColor ?? CpColors.deepGreyColor,
-          shape: const StadiumBorder(),
-        ),
-        child: Center(
-          widthFactor: 1,
-          child: Padding(
-            padding: padding.value,
-            child: child,
-          ),
-        ),
-      );
+    decoration: ShapeDecoration(
+      color: backgroundColor ?? CpColors.deepGreyColor,
+      shape: const StadiumBorder(),
+    ),
+    child: Center(widthFactor: 1, child: Padding(padding: padding.value, child: child)),
+  );
 }
 
 extension on CpChipPadding {
-  EdgeInsets get value {
-    switch (this) {
-      case CpChipPadding.small:
-        return const EdgeInsets.symmetric(horizontal: 20, vertical: 4);
-      case CpChipPadding.normal:
-        return const EdgeInsets.symmetric(horizontal: 44, vertical: 8);
-    }
-  }
+  EdgeInsets get value => switch (this) {
+    CpChipPadding.small => const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+    CpChipPadding.normal => const EdgeInsets.symmetric(horizontal: 44, vertical: 8),
+  };
 }

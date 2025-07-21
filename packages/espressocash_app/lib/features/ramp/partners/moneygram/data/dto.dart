@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_annotation_target
+// ignore_for_file: invalid_annotation_target, freezed compatibility
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -22,10 +22,8 @@ class MgWithdrawRequestDto with _$MgWithdrawRequestDto {
 @freezed
 class MgWithdrawResponseDto with _$MgWithdrawResponseDto {
   @JsonSerializable(fieldRename: FieldRename.snake)
-  const factory MgWithdrawResponseDto({
-    required String id,
-    required String url,
-  }) = _MgWithdrawResponseDto;
+  const factory MgWithdrawResponseDto({required String id, required String url}) =
+      _MgWithdrawResponseDto;
 
   factory MgWithdrawResponseDto.fromJson(Map<String, dynamic> json) =>
       _$MgWithdrawResponseDtoFromJson(json);
@@ -34,9 +32,8 @@ class MgWithdrawResponseDto with _$MgWithdrawResponseDto {
 @freezed
 class MgFetchTransactionResponseDto with _$MgFetchTransactionResponseDto {
   @JsonSerializable(fieldRename: FieldRename.snake)
-  const factory MgFetchTransactionResponseDto({
-    required TransactionStatus transaction,
-  }) = _MgFetchTransactionResponseDto;
+  const factory MgFetchTransactionResponseDto({required TransactionStatus transaction}) =
+      _MgFetchTransactionResponseDto;
 
   factory MgFetchTransactionResponseDto.fromJson(Map<String, dynamic> json) =>
       _$MgFetchTransactionResponseDtoFromJson(json);

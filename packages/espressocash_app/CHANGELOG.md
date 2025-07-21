@@ -1,3 +1,74 @@
+## 1.155.0
+
+ - **FIX**: update jupiter price api (#1755).
+ - **FEAT**: token swap updates (#1756).
+
+## 1.154.0
+
+ - **FIX**: send max sol (#1754).
+ - **FIX**: send token separator input (#1751).
+ - **FIX**: remove round token amount (#1752).
+ - **FEAT**: add token swap (#1742).
+
+## 1.153.0
+
+ - **FEAT**: add token send (#1738).
+
+## 1.152.1
+
+ - **REFACTOR**: update brij client (#1745).
+
+## 1.152.0
+
+ - **REFACTOR**: update brij_client to 1.0.7 (#1744).
+ - **REFACTOR**: upgrade linter (#1737).
+ - **FEAT**: update dependencies (#1743).
+
+## 1.151.0
+
+ - **FIX**: token price response (#1728).
+ - **FIX**: moneygram status mapping (#1716).
+ - **FIX**: bank overview page (#1713).
+ - **FEAT**: migrate to new backend client (#1715).
+ - **FEAT**: update brij client (#1726).
+ - **FEAT**: remove durable nonce on escrow payments (#1711).
+ - **FEAT**: update brij client version (#1718).
+ - **FEAT**: remove scalex codes and assets (#1712).
+
+## 1.150.0
+
+ - **REFACTOR**: migrate to Flutter 3.29.0 (#1705).
+ - **FIX**: bank account data is not saved (#1704).
+ - **FEAT**: add wallet to orders (#1709).
+ - **FEAT**: brij quoting for orders (#1708).
+ - **FEAT**: add personal info to profile  (#1703).
+
+## 1.149.0
+
+ - **REFACTOR**: picker ui (#1693).
+ - **FIX**: dependencies update (#1695).
+ - **FEAT**: update brij orders (#1701).
+ - **FEAT**: add new countries support for kyc (#1700).
+ - **FEAT**: kyc status fetching (#1699).
+ - **FEAT**: use dynamic kyc requirements (#1697).
+ - **FEAT**: brij new flow  (#1696).
+ - **FEAT**: remove scalex (#1698).
+ - **FEAT**: show brij partner disclaimers (#1691).
+ - **FEAT**: Update SDK constraints and upgrade deps (#1683).
+
+## 1.148.0
+
+ - **FEAT**: update Nigeria bank list (#1692).
+
+## 1.147.0
+
+ - **FEAT**: enable brij for ambassadors (#1690).
+
+## 1.146.0
+
+ - **FEAT**: updated brij ramp text (#1689).
+ - **FEAT**: coinflow api dto (#1688).
+
 ## 1.145.0
 
  - **FEAT**: add wallet address  (#1687).

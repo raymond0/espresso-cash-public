@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_positional_boolean_parameters
+// ignore_for_file: avoid_positional_boolean_parameters, more readable
 
 import 'package:pigeon/pigeon.dart';
 
@@ -188,8 +188,7 @@ class SignMessagesRequestDto implements SignPayloadsRequestDto {
   final Uint8List authorizationScope;
 }
 
-class SignAndSendTransactionsRequestDto
-    implements BaseVerifiableIdentityRequestDto {
+class SignAndSendTransactionsRequestDto implements BaseVerifiableIdentityRequestDto {
   const SignAndSendTransactionsRequestDto({
     required this.minContextSlot,
     required this.transactions,
@@ -295,12 +294,19 @@ class AuthIssuerConfigDto {
 @FlutterApi()
 abstract class ApiFlutter {
   const ApiFlutter();
+
   void onScenarioReady(int id);
+
   void onScenarioServingClients(int id);
+
   void onScenarioServingComplete(int id);
+
   void onScenarioComplete(int id);
+
   void onScenarioError(int id);
+
   void onScenarioTeardownComplete(int id);
+
   void onLowPowerAndNoConnection(int id);
 
   @async
@@ -310,28 +316,16 @@ abstract class ApiFlutter {
   bool reauthorize(ReauthorizeRequestDto request, int id);
 
   @async
-  SignedPayloadsResultDto? signTransactions(
-    SignTransactionsRequestDto request,
-    int id,
-  );
+  SignedPayloadsResultDto? signTransactions(SignTransactionsRequestDto request, int id);
 
   @async
-  SignedPayloadsResultDto? signMessages(
-    SignMessagesRequestDto request,
-    int id,
-  );
+  SignedPayloadsResultDto? signMessages(SignMessagesRequestDto request, int id);
 
   @async
-  SignaturesResultDto? signAndSendTransactions(
-    SignAndSendTransactionsRequestDto request,
-    int id,
-  );
+  SignaturesResultDto? signAndSendTransactions(SignAndSendTransactionsRequestDto request, int id);
 
   @async
-  void deauthorize(
-    DeauthorizeEventDto event,
-    int id,
-  );
+  void deauthorize(DeauthorizeEventDto event, int id);
 
   void onNewIntent(bool isInitialIntent);
 }
@@ -339,7 +333,9 @@ abstract class ApiFlutter {
 @HostApi()
 abstract class ApiHost {
   const ApiHost();
+
   void start(int id);
+
   void close(int id);
 
   @async

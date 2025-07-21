@@ -2,11 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'processing_state.freezed.dart';
 
-@Freezed(
-  when: FreezedWhenOptions.none,
-  map: FreezedMapOptions.none,
-  copyWith: false,
-)
+@Freezed(when: FreezedWhenOptions.none, map: FreezedMapOptions.none, copyWith: false)
 sealed class ProcessingState<E extends Exception> with _$ProcessingState<E> {
   const factory ProcessingState.none() = ProcessingStateNone;
 
@@ -19,7 +15,8 @@ sealed class ProcessingState<E extends Exception> with _$ProcessingState<E> {
   bool get isProcessing => this is ProcessingStateProcessing;
 }
 
-abstract class StateWithProcessingState {
+@immutable
+sealed class StateWithProcessingState {
   const StateWithProcessingState();
 
   ProcessingState get processingState;
@@ -27,5 +24,4 @@ abstract class StateWithProcessingState {
 
 ProcessingStateNone none() => const ProcessingStateNone();
 ProcessingStateProcessing processing() => const ProcessingStateProcessing();
-ProcessingStateError<E> error<E extends Exception>(E e) =>
-    ProcessingStateError(e);
+ProcessingStateError<E> error<E extends Exception>(E e) => ProcessingStateError(e);

@@ -30,6 +30,9 @@ class CpTextField extends StatelessWidget {
     this.multiLine = false,
     this.textCapitalization = TextCapitalization.none,
     this.autocorrect = true,
+    this.height,
+    this.textHeight = 1.2,
+    this.maxLength,
   });
 
   final TextEditingController? controller;
@@ -41,6 +44,9 @@ class CpTextField extends StatelessWidget {
   final bool readOnly;
   final double fontSize;
   final FontWeight fontWeight;
+  final double? height;
+  final double textHeight;
+  final int? maxLength;
   final bool disabled;
   final TextInputType? inputType;
   final List<TextInputFormatter>? inputFormatters;
@@ -60,22 +66,22 @@ class CpTextField extends StatelessWidget {
     final multiLine = this.multiLine ?? false;
 
     return Container(
+      height: height,
       margin: margin,
-      decoration: border == CpTextFieldBorder.stadium
-          ? ShapeDecoration(
-              color: backgroundColor,
-              shape: const StadiumBorder(),
-            )
-          : BoxDecoration(
-              color: backgroundColor,
-              borderRadius: const BorderRadius.all(Radius.circular(8)),
-            ),
+      decoration:
+          border == CpTextFieldBorder.stadium
+              ? ShapeDecoration(color: backgroundColor, shape: const StadiumBorder())
+              : BoxDecoration(
+                color: backgroundColor,
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+              ),
       child: CupertinoTextField(
         autocorrect: autocorrect,
         enabled: !disabled,
         decoration: const BoxDecoration(),
         suffix: suffix,
         padding: padding,
+        maxLength: maxLength,
         readOnly: readOnly,
         textAlignVertical: TextAlignVertical.center,
         controller: controller,
@@ -85,7 +91,7 @@ class CpTextField extends StatelessWidget {
           fontWeight: fontWeight,
           fontSize: fontSize,
           color: textColor,
-          height: 1.2,
+          height: textHeight,
         ),
         textAlign: textAlign,
         placeholder: placeholder,
@@ -109,23 +115,17 @@ class FittedTextEditingController extends TextEditingController {
     required BuildContext context,
     TextStyle? style,
     required bool withComposing,
-  }) =>
-      TextSpan(
-        style: style,
-        children: [
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) =>
-                  FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  text,
-                  style: style,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
+  }) => TextSpan(
+    style: style,
+    children: [
+      WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: LayoutBuilder(
+          builder:
+              (BuildContext context, BoxConstraints constraints) =>
+                  FittedBox(fit: BoxFit.scaleDown, child: Text(text, style: style)),
+        ),
+      ),
+    ],
+  );
 }

@@ -37,21 +37,10 @@ class CpActivityTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-      leading: showIcon
-          ? SizedBox.square(
-              dimension: 42,
-              child: icon,
-            )
-          : null,
+      leading: showIcon ? SizedBox.square(dimension: 42, child: icon) : null,
       title: Row(
         children: [
-          Expanded(
-            child: Text(
-              title,
-              style: _titleStyle,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Expanded(child: Text(title, style: _titleStyle, overflow: TextOverflow.ellipsis)),
           if (incomingAmount != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -89,23 +78,13 @@ const _inAmountStyle = TextStyle(
   fontWeight: FontWeight.w500,
 );
 
-const _subtitleStyle = TextStyle(
-  fontSize: 14,
-  color: Colors.white,
-  letterSpacing: .19,
-);
+const _subtitleStyle = TextStyle(fontSize: 14, color: Colors.white, letterSpacing: .19);
 
 extension on CpActivityTileStatus {
-  String text(BuildContext context) {
-    switch (this) {
-      case CpActivityTileStatus.inProgress:
-        return context.l10n.activities_lblInProgress;
-      case CpActivityTileStatus.success:
-        return context.l10n.activities_lblSuccess;
-      case CpActivityTileStatus.failure:
-        return context.l10n.activities_lblFailure;
-      case CpActivityTileStatus.canceled:
-        return context.l10n.activities_lblCanceled;
-    }
-  }
+  String text(BuildContext context) => switch (this) {
+    CpActivityTileStatus.inProgress => context.l10n.activities_lblInProgress,
+    CpActivityTileStatus.success => context.l10n.activities_lblSuccess,
+    CpActivityTileStatus.failure => context.l10n.activities_lblFailure,
+    CpActivityTileStatus.canceled => context.l10n.activities_lblCanceled,
+  };
 }

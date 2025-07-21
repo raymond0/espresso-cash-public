@@ -1,7 +1,7 @@
 abstract class TransactionVersion {
-  factory TransactionVersion.fromJson(dynamic value) => value is String
-      ? LegacyTransactionVersion()
-      : VersionedTransactionVersion(value as num);
+  factory TransactionVersion.fromJson(dynamic value) =>
+      // ignore: avoid-type-casts, controlled type
+      value is String ? LegacyTransactionVersion() : VersionedTransactionVersion(value as num);
 
   abstract final num? version;
 
@@ -9,8 +9,6 @@ abstract class TransactionVersion {
 }
 
 class LegacyTransactionVersion implements TransactionVersion {
-  LegacyTransactionVersion();
-
   @override
   final num? version = null;
 

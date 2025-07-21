@@ -1,27 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:kyc_client_dart/kyc_client_dart.dart';
 
 import '../../../di.dart';
-import '../services/kyc_service.dart';
+import '../models/kyc_validation_status.dart';
+import '../services/pending_kyc_service.dart';
 
-typedef KycBuilder = Widget Function(
-  BuildContext context,
-  UserData userData,
-);
+typedef KycStatusListenerBuilder =
+    Widget Function(BuildContext context, AsyncSnapshot<KycValidationStatus> snapshot);
 
-class KycListener extends StatelessWidget {
-  const KycListener({
-    super.key,
-    required this.builder,
-  });
+class KycStatusListener extends StatefulWidget {
+  const KycStatusListener({super.key, required this.builder, required this.country});
 
-  final KycBuilder builder;
+  final KycStatusListenerBuilder builder;
+  final String country;
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<UserData?>(
-        valueListenable: sl<KycSharingService>(),
-        builder: (context, userData, _) => userData == null
-            ? const Center(child: CircularProgressIndicator())
-            : builder(context, userData),
-      );
+  State<KycStatusListener> createState() => _KycStatusListenerState();
+}
+
+class _KycStatusListenerState extends State<KycStatusListener> {
+  late Stream<KycValidationStatus> _stream = sl<PendingKycService>().pollKycStatus(
+    country: widget.country,
+  );
+
+  @override
+  void didUpdateWidget(covariant KycStatusListener oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.country != widget.country) {
+      _stream = sl<PendingKycService>().pollKycStatus(country: widget.country);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      StreamBuilder<KycValidationStatus>(stream: _stream, builder: widget.builder);
 }

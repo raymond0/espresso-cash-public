@@ -12,13 +12,16 @@ part of 'message.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#custom-getters-and-methods');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 /// @nodoc
 mixin _$Message {
   List<Instruction> get instructions => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Message
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $MessageCopyWith<Message> get copyWith => throw _privateConstructorUsedError;
 }
 
@@ -31,8 +34,7 @@ abstract class $MessageCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$MessageCopyWithImpl<$Res, $Val extends Message>
-    implements $MessageCopyWith<$Res> {
+class _$MessageCopyWithImpl<$Res, $Val extends Message> implements $MessageCopyWith<$Res> {
   _$MessageCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -40,24 +42,27 @@ class _$MessageCopyWithImpl<$Res, $Val extends Message>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of Message
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? instructions = null,
-  }) {
-    return _then(_value.copyWith(
-      instructions: null == instructions
-          ? _value.instructions
-          : instructions // ignore: cast_nullable_to_non_nullable
-              as List<Instruction>,
-    ) as $Val);
+  $Res call({Object? instructions = null}) {
+    return _then(
+      _value.copyWith(
+            instructions:
+                null == instructions
+                    ? _value.instructions
+                    : instructions // ignore: cast_nullable_to_non_nullable
+                        as List<Instruction>,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
-  factory _$$MessageImplCopyWith(
-          _$MessageImpl value, $Res Function(_$MessageImpl) then) =
+  factory _$$MessageImplCopyWith(_$MessageImpl value, $Res Function(_$MessageImpl) then) =
       __$$MessageImplCopyWithImpl<$Res>;
   @override
   @useResult
@@ -65,24 +70,25 @@ abstract class _$$MessageImplCopyWith<$Res> implements $MessageCopyWith<$Res> {
 }
 
 /// @nodoc
-class __$$MessageImplCopyWithImpl<$Res>
-    extends _$MessageCopyWithImpl<$Res, _$MessageImpl>
+class __$$MessageImplCopyWithImpl<$Res> extends _$MessageCopyWithImpl<$Res, _$MessageImpl>
     implements _$$MessageImplCopyWith<$Res> {
-  __$$MessageImplCopyWithImpl(
-      _$MessageImpl _value, $Res Function(_$MessageImpl) _then)
-      : super(_value, _then);
+  __$$MessageImplCopyWithImpl(_$MessageImpl _value, $Res Function(_$MessageImpl) _then)
+    : super(_value, _then);
 
+  /// Create a copy of Message
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? instructions = null,
-  }) {
-    return _then(_$MessageImpl(
-      instructions: null == instructions
-          ? _value._instructions
-          : instructions // ignore: cast_nullable_to_non_nullable
-              as List<Instruction>,
-    ));
+  $Res call({Object? instructions = null}) {
+    return _then(
+      _$MessageImpl(
+        instructions:
+            null == instructions
+                ? _value._instructions
+                : instructions // ignore: cast_nullable_to_non_nullable
+                    as List<Instruction>,
+      ),
+    );
   }
 }
 
@@ -90,8 +96,8 @@ class __$$MessageImplCopyWithImpl<$Res>
 
 class _$MessageImpl extends _Message {
   const _$MessageImpl({required final List<Instruction> instructions})
-      : _instructions = instructions,
-        super._();
+    : _instructions = instructions,
+      super._();
 
   final List<Instruction> _instructions;
   @override
@@ -111,15 +117,15 @@ class _$MessageImpl extends _Message {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$MessageImpl &&
-            const DeepCollectionEquality()
-                .equals(other._instructions, _instructions));
+            const DeepCollectionEquality().equals(other._instructions, _instructions));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, const DeepCollectionEquality().hash(_instructions));
+  int get hashCode => Object.hash(runtimeType, const DeepCollectionEquality().hash(_instructions));
 
-  @JsonKey(ignore: true)
+  /// Create a copy of Message
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$MessageImplCopyWith<_$MessageImpl> get copyWith =>
@@ -127,14 +133,15 @@ class _$MessageImpl extends _Message {
 }
 
 abstract class _Message extends Message {
-  const factory _Message({required final List<Instruction> instructions}) =
-      _$MessageImpl;
+  const factory _Message({required final List<Instruction> instructions}) = _$MessageImpl;
   const _Message._() : super._();
 
   @override
   List<Instruction> get instructions;
+
+  /// Create a copy of Message
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
-  _$$MessageImplCopyWith<_$MessageImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$MessageImplCopyWith<_$MessageImpl> get copyWith => throw _privateConstructorUsedError;
 }

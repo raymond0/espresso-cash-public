@@ -1,3 +1,5 @@
+// ignore_for_file: avoid-type-casts
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'return_data.g.dart';
@@ -5,13 +7,9 @@ part 'return_data.g.dart';
 /// A ReturnData
 @JsonSerializable()
 class ReturnData {
-  const ReturnData({
-    required this.programId,
-    required this.data,
-  });
+  const ReturnData({required this.programId, required this.data});
 
-  factory ReturnData.fromJson(Map<String, dynamic> json) =>
-      _$ReturnDataFromJson(json);
+  factory ReturnData.fromJson(Map<String, dynamic> json) => _$ReturnDataFromJson(json);
 
   /// The program that generated the return data, as base-58 encoded Pubkey
   final String programId;

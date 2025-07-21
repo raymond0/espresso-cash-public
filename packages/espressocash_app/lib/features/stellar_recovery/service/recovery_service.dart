@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:decimal/decimal.dart';
-import 'package:espressocash_api/espressocash_api.dart';
+import 'package:ec_client_dart/ec_client_dart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,6 +42,7 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
   final StellarWallet _stellarWallet;
 
   final StellarClient _stellarClient;
+  // ignore: dispose-class-fields, false positive
   final EspressoCashClient _ecClient;
   final AllbridgeApiClient _allbridgeApiClient;
 
@@ -75,8 +76,7 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
 
     return switch (status) {
       'pending' => StellarRecoveryState.pending(amount: amount),
-      'processing' =>
-        StellarRecoveryState.processing(amount: amount, txId: txId),
+      'processing' => StellarRecoveryState.processing(amount: amount, txId: txId),
       'completed' => StellarRecoveryState.completed(amount: amount, txId: txId),
       'failed' => const StellarRecoveryState.failed(),
       'dismissed' => const StellarRecoveryState.dismissed(),
@@ -93,19 +93,14 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
 
     final fee = await _ecClient
         .calculateMoneygramFee(
-          MoneygramFeeRequestDto(
-            type: RampTypeDto.onRamp,
-            amount: usdcBalance.toString(),
-          ),
+          MoneygramFeeRequestDto(type: RampTypeDto.onRamp, amount: usdcBalance.toString()),
         )
         .then((e) => e.bridgeFee);
 
     final total = Decimal.parse(usdcBalance.toString()) - Decimal.parse(fee);
 
-    final amount = Amount.fromDecimal(
-      value: total,
-      currency: Currency.usdc,
-    ) as CryptoAmount;
+    // ignore: avoid-type-casts, controlled type
+    final amount = Amount.fromDecimal(value: total, currency: Currency.usdc) as CryptoAmount;
 
     value = StellarRecoveryState.pending(amount: amount);
   }
@@ -123,18 +118,16 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
         return;
       }
 
-      final walletAmount = Amount.fromDecimal(
-        value: Decimal.parse(usdcBalance.toString()),
-        currency: Currency.usdc,
-      ) as CryptoAmount;
+      final walletAmount =
+          // ignore: avoid-type-casts, controlled type
+          Amount.fromDecimal(value: Decimal.parse(usdcBalance.toString()), currency: Currency.usdc)
+              as CryptoAmount;
 
       final hash = await _initiateSwapToSolana(walletAmount);
 
-      final receivedAmount =
-          _storage.getInt(_stellarRecoveryAmountKey).toCryptoAmount;
+      final receivedAmount = _storage.getInt(_stellarRecoveryAmountKey).toCryptoAmount;
 
-      value =
-          StellarRecoveryState.processing(amount: receivedAmount, txId: hash);
+      value = StellarRecoveryState.processing(amount: receivedAmount, txId: hash);
 
       _watchBridgeTx();
     } on Exception {
@@ -188,12 +181,8 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
       return;
     }
 
-    _watcher =
-        Stream<void>.periodic(const Duration(seconds: 5)).listen((_) async {
-      final response = await _allbridgeApiClient.fetchStatus(
-        chain: Chain.stellar,
-        hash: txId,
-      );
+    _watcher = Stream<void>.periodic(const Duration(seconds: 5)).listen((_) async {
+      final response = await _allbridgeApiClient.fetchStatus(chain: Chain.stellar, hash: txId);
 
       final status = response?.receive;
 
@@ -211,8 +200,7 @@ class StellarRecoveryService extends ValueNotifier<StellarRecoveryState> {
       _refreshBalance();
 
       value = StellarRecoveryState.completed(
-        amount: value.amount ??
-            const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc),
+        amount: value.amount ?? const CryptoAmount(value: 0, cryptoCurrency: Currency.usdc),
         txId: txId,
       );
 
@@ -260,10 +248,7 @@ extension on double {
 }
 
 extension on int? {
-  CryptoAmount get toCryptoAmount => CryptoAmount(
-        value: this ?? 0,
-        cryptoCurrency: Currency.usdc,
-      );
+  CryptoAmount get toCryptoAmount => CryptoAmount(value: this ?? 0, cryptoCurrency: Currency.usdc);
 }
 
 // Cannot bridge less than this amount

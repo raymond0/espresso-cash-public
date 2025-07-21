@@ -1,7 +1,7 @@
 part of 'bloc.dart';
 
 @freezed
-class MobileWalletState with _$MobileWalletState {
+sealed class MobileWalletState with _$MobileWalletState {
   const factory MobileWalletState.none() = None;
   const factory MobileWalletState.sessionTerminated() = SessionTerminated;
   const factory MobileWalletState.remote(RemoteRequest request) = Remote;
@@ -9,13 +9,9 @@ class MobileWalletState with _$MobileWalletState {
 
 @freezed
 class RemoteRequest with _$RemoteRequest {
-  const factory RemoteRequest.authorizeDapp({
-    required AuthorizeRequest request,
-  }) = AuthorizeDapp;
+  const factory RemoteRequest.authorizeDapp({required AuthorizeRequest request}) = AuthorizeDapp;
 
-  const factory RemoteRequest.signPayloads({
-    required SignPayloadsRequest request,
-  }) = SignPayloads;
+  const factory RemoteRequest.signPayloads({required SignPayloadsRequest request}) = SignPayloads;
 
   const factory RemoteRequest.signTransactionsForSending({
     required SignAndSendTransactionsRequest request,

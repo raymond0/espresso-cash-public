@@ -22,16 +22,11 @@ class CpInfoWidget extends StatelessWidget {
   final double infoRadius;
   final double? iconSize;
 
-  Color get _iconColor {
-    switch (variant) {
-      case CpInfoVariant.light:
-        return CpColors.backgroundAccentColor;
-      case CpInfoVariant.dark:
-        return CpColors.blackGreyColor;
-      case CpInfoVariant.black:
-        return Colors.black;
-    }
-  }
+  Color get _iconColor => switch (variant) {
+    CpInfoVariant.light => CpColors.backgroundAccentColor,
+    CpInfoVariant.dark => CpColors.blackGreyColor,
+    CpInfoVariant.black => Colors.black,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -48,34 +43,25 @@ class CpInfoWidget extends StatelessWidget {
         ),
         Flexible(
           child: DefaultTextStyle.merge(
-            style: const TextStyle(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w500),
             child: message,
           ),
         ),
       ],
     );
 
-    switch (variant) {
-      case CpInfoVariant.dark:
-        return Padding(
-          padding: padding,
-          child: content,
-        );
-      case CpInfoVariant.light:
-        return CpRoundedRectangle(
-          backgroundColor: CpColors.backgroundAccentColor,
-          padding: padding,
-          child: content,
-        );
-      case CpInfoVariant.black:
-        return CpRoundedRectangle(
-          backgroundColor: Colors.black,
-          padding: padding,
-          child: content,
-        );
-    }
+    return switch (variant) {
+      CpInfoVariant.dark => Padding(padding: padding, child: content),
+      CpInfoVariant.light => CpRoundedRectangle(
+        backgroundColor: CpColors.backgroundAccentColor,
+        padding: padding,
+        child: content,
+      ),
+      CpInfoVariant.black => CpRoundedRectangle(
+        backgroundColor: Colors.black,
+        padding: padding,
+        child: content,
+      ),
+    };
   }
 }

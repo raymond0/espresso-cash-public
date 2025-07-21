@@ -47,25 +47,20 @@ class FadeGradient extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-        child: Container(
-          height: height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: direction.begin,
-              end: direction.end,
-              colors: color == FadeGradientColor.white
-                  ? [
-                      Colors.white,
-                      Colors.white.withOpacity(0),
-                    ]
-                  : [
-                      CpColors.deepGreyColor,
-                      CpColors.deepGreyColor.withOpacity(0),
-                    ],
-            ),
-          ),
+    child: Container(
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: direction.begin,
+          end: direction.end,
+          colors:
+              color == FadeGradientColor.white
+                  ? [Colors.white, Colors.white.withOpacity(0)]
+                  : [CpColors.deepGreyColor, CpColors.deepGreyColor.withOpacity(0)],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class SolidPadding extends StatelessWidget {
@@ -82,31 +77,21 @@ class SolidPadding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => IgnorePointer(
-        child: Container(
-          height: height,
-          decoration: const BoxDecoration(
-            color: CpColors.deepGreyColor,
-          ),
-        ),
-      );
+    child: Container(
+      height: height,
+      decoration: const BoxDecoration(color: CpColors.deepGreyColor),
+    ),
+  );
 }
 
 extension on FadeGradientDirection {
-  Alignment get begin {
-    switch (this) {
-      case FadeGradientDirection.topDown:
-        return Alignment.topCenter;
-      case FadeGradientDirection.bottomUp:
-        return Alignment.bottomCenter;
-    }
-  }
+  Alignment get begin => switch (this) {
+    FadeGradientDirection.topDown => Alignment.topCenter,
+    FadeGradientDirection.bottomUp => Alignment.bottomCenter,
+  };
 
-  Alignment get end {
-    switch (this) {
-      case FadeGradientDirection.topDown:
-        return Alignment.bottomCenter;
-      case FadeGradientDirection.bottomUp:
-        return Alignment.topCenter;
-    }
-  }
+  Alignment get end => switch (this) {
+    FadeGradientDirection.topDown => Alignment.bottomCenter,
+    FadeGradientDirection.bottomUp => Alignment.topCenter,
+  };
 }

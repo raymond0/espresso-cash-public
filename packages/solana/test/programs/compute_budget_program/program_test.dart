@@ -41,28 +41,23 @@ void main() {
     );
 
     const unitPriceMicroLamports = 1000;
-    const computeUnitLimit = 200000;
+    const computeUnitLimit = 200_000;
 
     message = message.copyWith(
       instructions: [
         ...message.instructions,
         ComputeBudgetInstruction.setComputeUnitLimit(units: computeUnitLimit),
-        ComputeBudgetInstruction.setComputeUnitPrice(
-          microLamports: unitPriceMicroLamports,
-        ),
+        ComputeBudgetInstruction.setComputeUnitPrice(microLamports: unitPriceMicroLamports),
       ],
     );
-    compiledMessage = message.compile(
-      recentBlockhash: bh,
-      feePayer: sender.publicKey,
-    );
+    compiledMessage = message.compile(recentBlockhash: bh, feePayer: sender.publicKey);
 
     final feeWithComputeUnitPrice = await client.rpcClient.getFeeForMessage(
       base64Encode(compiledMessage.toByteArray().toList()),
       commitment: commitment,
     );
 
-    const micro = 1000000;
+    const micro = 1_000_000;
     expect(
       feeWithComputeUnitPrice! - feeWithoutComputeUnitPrice!,
       (computeUnitLimit * unitPriceMicroLamports) ~/ micro,
