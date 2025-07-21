@@ -1,10 +1,9 @@
 class HttpException implements Exception {
-  const HttpException(this._code, this._message);
+  const HttpException(this.code, this.message);
 
-  final int _code;
-  final String _message;
+  final int code;
+  final String message;
 
   @override
-  String toString() =>
-      'http status code $_code, the following content\n\n---\n$_message';
+  String toString() => 'http status code $code, the following content\n\n---\n$message';
 }

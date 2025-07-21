@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:solana/dto.dart';
 import 'package:solana/solana.dart';
@@ -40,6 +41,28 @@ class SolanaClient {
     );
 
     await waitForSignatureStatus(signature, status: commitment);
+
+    return signature;
+  }
+
+  Future<TransactionId> sendTransaction({
+    required Message message,
+    required List<Ed25519HDKeyPair> signers,
+    SignatureCallback onSigned = ignoreOnSigned,
+    required Commitment commitment,
+  }) async {
+    final bh = await rpcClient.getLatestBlockhash(commitment: Commitment.finalized).value;
+    final tx = await signTransaction(
+      bh,
+      message,
+      signers,
+    );
+    await onSigned(tx.signatures.first.toBase58());
+
+    final signature = await rpcClient.sendTransaction(
+      tx.encode(),
+      preflightCommitment: commitment,
+    );
 
     return signature;
   }
